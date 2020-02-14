@@ -18,6 +18,7 @@ index<-data.frame(interval,pollutants)
 
 #loop to build 5 dataset
 for (i in 1:5){
+  
   #dataset preparation
   #cut a dataset for each pollutants from the main dataset 
   begin<-index[i,1]
@@ -35,7 +36,7 @@ for (i in 1:5){
   
   #principal component analysis
   pr.out<-prcomp(dfx, scale=TRUE)
-  #dispaly and plot first two PC (uso autoplot perchè con biplot viene un casino)
+  #display and plot first two PC (uso autoplot perchè con biplot viene un casino)
   pr.out$rotation[,1:2]
   graph<-autoplot(pr.out,variance_percentage=FALSE,loadings=TRUE,
            loadings.label=TRUE,loadings.colour="coral",loadings.label.size=3,
@@ -48,20 +49,26 @@ for (i in 1:5){
        col =" blue")
   print(scree)
   
+  #compute vector of BIC for first 27 principal components
+  BIC<-c(1:27)
+  for (j in 1:27) {
+    f<-pr.out$x[,1:j]%*%t(pr.out$rotation[,1:j]) #compute aF in X=aF+e
+    res_mat<-scale(dfx)-f                        #compute matrix of residuals
+    res_mat_sq<-res_mat*res_mat
+    res<-sum(rowSums(res_mat_sq))
+    k<-j
+    BICk<-log(res)+k*((log(28^2))/28^2)
+    BIC[j]<-BICk
+  }
+  
+  
+  
   #save relevant objects with the respective name
+  assign(paste0("BIC_", index[i,2]), BIC)
   assign(paste0("df_", index[i,2]), dfx)
   assign(paste0("prcomp_",index[i,2]),pr.out)
+  #remove non relevant objects
   rm(dfx)
+  rm(BIC)
   
   }
-
-
-
-
-#if needed to save graphs, use this structure in the loop:
-#for(i in 1:15) {   
-#Filename <- paste("plot", i, ".pdf", sep="")
-#abc <- ggplot(mtcars, aes(cyl, disp)) + 
-#  geom_point(alpha=.6, size=3)
-#ggsave(filename = Filename, abc, width=4, height=4)
-#}
