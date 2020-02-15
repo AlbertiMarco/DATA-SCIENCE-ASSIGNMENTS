@@ -2,73 +2,102 @@
 library(readxl)
 library(ggplot2)
 library(ggfortify)
+library(dplyr)
 
-#set directory
+#set directory (non sono risucito a fare in modo di scaricare direttamente i dati dalla repo github)
 setwd("~/Tilburg/Courses/Data Science Methods/Assignment1")
 
 #load data
 data<-read_excel("env_air_emis.xls")
-#eliminate all the columns with missing values
-df<-data[complete.cases(data), ]
+df<-data[complete.cases(data), ]     #eliminate all the columns with missing values
 
-#build index for your loop
-interval<-c(1,30,59,88,117)
+#build 'index' for your loop
+interval<-c(1,30,59,88,117)          #number of the first row of each individidual dataset 
 pollutants<-c("ammonia","nmvoc","smallpart","largepart","sulphur")
 index<-data.frame(interval,pollutants)
 
-#loop to build 5 dataset
+PC1<-data.frame(matrix(ncol=5,nrow=28))
+PC2<-data.frame(matrix(ncol=5,nrow=28))
+
+#loop for points a) to c)
 for (i in 1:5){
   
   #dataset preparation
-  #cut a dataset for each pollutants from the main dataset 
   begin<-index[i,1]
   end<-index[i,1]+28
-  dfx<-df[begin:end,]
-  dfx[[1]]<-paste(dfx[[1]],index[i,2],sep="_")
+  dfx<-df[begin:end,]            #cut the right portion of the excel file, 'according to begin' and 'end'
+  dfx[[1]]<-paste(dfx[[1]],index[i,2],sep="_")  #rename first column with the name of the pollutant
   dfx<-as.data.frame(dfx)
-  colnames(dfx)<-dfx[1,]
+  colnames(dfx)<-dfx[1,]         #set first column as observations' names and first row as variables' names
   rownames(dfx)<-dfx[,1]
-  dfx<-dfx[c(2:29),c(2:29)]
-  dfx<-as.data.frame(t(dfx))
-  #convert factor columns into numeric to apply prcomp
+  dfx<-dfx[c(2:29),c(2:29)]      #drop first column and obtain the final datset
+  dfx<-as.data.frame(t(dfx))     #convert factor columns into numeric to apply prcomp
   indx <- sapply(dfx, is.factor)
   dfx[indx] <- lapply(dfx[indx], function(x) as.numeric(as.character(x)))
   
   #principal component analysis
   pr.out<-prcomp(dfx, scale=TRUE)
-  #display and plot first two PC (uso autoplot perchè con biplot viene un casino)
-  pr.out$rotation[,1:2]
+  print(pr.out$rotation[,1:2])           # print first two PC loadings and plot first two PC
   graph<-autoplot(pr.out,variance_percentage=FALSE,loadings=TRUE,
            loadings.label=TRUE,loadings.colour="coral",loadings.label.size=3,
            loadings.label.colour="grey35", scale=0,
            colour="gold2")
   print(graph)
-  #screeplot
-  pve =100* pr.out$sdev ^2/ sum(pr.out$sdev ^2)
+  pve =100* pr.out$sdev ^2/ sum(pr.out$sdev ^2)  #screeplot
   scree<-plot(pve , type ="o", ylab="PVE ", xlab=" Principal Component ",
        col =" blue")
   print(scree)
   
   #compute vector of BIC for first 27 principal components
-  BIC<-c(1:27)
+  BIC<-c(1:27)   #initialize a numeric vector to be filled with BIC(k) values. set max k=p-1
   for (j in 1:27) {
     f<-pr.out$x[,1:j]%*%t(pr.out$rotation[,1:j]) #compute aF in X=aF+e
     res_mat<-scale(dfx)-f                        #compute matrix of residuals
-    res_mat_sq<-res_mat*res_mat
-    res<-sum(rowSums(res_mat_sq))
+    res_mat_sq<-res_mat*res_mat                  #square residuals
+    res<-sum(rowSums(res_mat_sq))                #residuals sum of squares
+    print(log(res))
     k<-j
-    BICk<-log(res)+k*((log(28^2))/28^2)
-    BIC[j]<-BICk
+    BICk<-log(res)+k*(log(28^2)/(28^2))          #BIC for each k
+    BIC[j]<-BICk                                 #fill BIC vector at each iteration
   }
+  min<-min(BIC)
+  num_pc<-match(min,BIC)                         #find and print k, the index of the min of BIC
+  cat("According to the BIC criterion, the optimal number of principal components is ", num_pc)
   
+  ###potential issue: smallest value for BIC is always the one with ###
+  ###the max number of principal components...strange!I checked the calculations###
+  ###and they seem fine. I think the issue is that the penalty part of BIC is really###
+  ###trivial compared to the log(SSR) part####
   
+  #save first two PC in separate dataset for point d)
+  PC1[i]<-pr.out$x[,1]
+  colnames(PC1)[i]<-as.character(index[i,2])
+  PC2[i]<-pr.out$x[,2]
+  colnames(PC2)[i]<-as.character(index[i,2])
   
-  #save relevant objects with the respective name
+  #save relevant objects with their respective name
   assign(paste0("BIC_", index[i,2]), BIC)
   assign(paste0("df_", index[i,2]), dfx)
   assign(paste0("prcomp_",index[i,2]),pr.out)
   #remove non relevant objects
   rm(dfx)
   rm(BIC)
+  rm(pr.out)
   
-  }
+}
+
+#point d) : Plot first 2 principal components 
+PC1["years"]<-c(1990:2017)
+PC1<-gather(PC1, `ammonia`, `largepart`, `nmvoc`, `smallpart`, `sulphur`, key = "pollutant", value = "value")
+ggplot(PC1,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
+  geom_point(size = 2.25) +  geom_line(size = 1) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  labs(title = "Principal Component 1",x="Years",y="Value")
+
+PC2["years"]<-c(1990:2017)
+PC2<-gather(PC2, `ammonia`, `largepart`, `nmvoc`, `smallpart`, `sulphur`, key = "pollutant", value = "value")
+ggplot(PC2,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
+  geom_point(size = 2.25) +  geom_line(size = 1) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  labs(title = "Principal Component 2",x="Years",y="Value")
+
