@@ -1,7 +1,7 @@
 ### Repository for collecting Assignments for the Data Science Method course
 - [Assignment 1](https://tilburguniversity.instructure.com/courses/1876/assignments/14065)
 
-###Comments on the uploaded code
+### Comments on the uploaded code
 
 General comments
 Ho fatto l'esercizio 1. Ho commentato tutto pesantemente in modo che tu possa scorrere il codice velocemente (comunque non c'è nulla di esoterico). 3 questioni:
