@@ -5,7 +5,7 @@ library(ggfortify)
 library(dplyr)
 
 #set directory (non sono risucito a fare in modo di scaricare direttamente i dati dalla repo github)
-setwd("~/Tilburg/Courses/Data Science Methods/Assignment1")
+setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
 
 #load data
 data<-read_excel("env_air_emis.xls")
@@ -54,8 +54,7 @@ for (i in 1:5){
     f<-pr.out$x[,1:j]%*%t(pr.out$rotation[,1:j]) #compute aF in X=aF+e
     res_mat<-scale(dfx)-f                        #compute matrix of residuals
     res_mat_sq<-res_mat*res_mat                  #square residuals
-    res<-sum(rowSums(res_mat_sq))                #residuals sum of squares
-    print(log(res))
+    res<-(sum(rowSums(res_mat_sq))/28^2)         #residuals sum of squares
     k<-j
     BICk<-log(res)+k*(log(28^2)/(28^2))          #BIC for each k
     BIC[j]<-BICk                                 #fill BIC vector at each iteration
@@ -79,6 +78,8 @@ for (i in 1:5){
   assign(paste0("BIC_", index[i,2]), BIC)
   assign(paste0("df_", index[i,2]), dfx)
   assign(paste0("prcomp_",index[i,2]),pr.out)
+  assign(paste0("Screeplot_",index[i,2]),scree)
+  assign(paste0("PC1-PC2_",index[i,2]),graph)
   #remove non relevant objects
   rm(dfx)
   rm(BIC)
@@ -88,16 +89,20 @@ for (i in 1:5){
 
 #point d) : Plot first 2 principal components 
 PC1["years"]<-c(1990:2017)
-PC1<-gather(PC1, `ammonia`, `largepart`, `nmvoc`, `smallpart`, `sulphur`, key = "pollutant", value = "value")
-ggplot(PC1,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
+PC1<-gather(PC1, `ammonia`, `largepart`, `nmvoc`,      #transform data to be plotted
+            `smallpart`, `sulphur`, key = "pollutant", value = "value")
+PC1_plot<-ggplot(PC1,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
   geom_point(size = 2.25) +  geom_line(size = 1) +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
   labs(title = "Principal Component 1",x="Years",y="Value")
+print(PC1_plot)
 
 PC2["years"]<-c(1990:2017)
-PC2<-gather(PC2, `ammonia`, `largepart`, `nmvoc`, `smallpart`, `sulphur`, key = "pollutant", value = "value")
-ggplot(PC2,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
+PC2<-gather(PC2, `ammonia`, `largepart`, `nmvoc`,      #transform data to be plotted
+            `smallpart`, `sulphur`, key = "pollutant", value = "value")
+PC2_plot<-ggplot(PC2,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
   geom_point(size = 2.25) +  geom_line(size = 1) +
   theme(axis.text.x = element_text(angle = 45, hjust=1)) +
   labs(title = "Principal Component 2",x="Years",y="Value")
+print(PC2_plot)
 
