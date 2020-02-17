@@ -27,7 +27,8 @@ Upload dataset:
 setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments")
 #setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
 data<-read_excel("env_air_emis.xls")
-EU_labels<-read.csv("EU labels.csv", header = FALSE ,sep=";") #Short labelling of countries
+x <- getURL("https://raw.githubusercontent.com/AlbertiMarco/DATA-SCIENCE-ASSIGNMENTS/master/EU%20labels.csv")
+EU_labels<- read.csv(text = x, header = FALSE ,sep=";") #import country tags to make plots more readable
 rownames(EU_labels)<-EU_labels[[1]]
 
 ```
@@ -40,7 +41,7 @@ df<-data[rowSums(is.na(data))<length(data)-5,]
 
 ```
 
-Given the data structure and the exercises a-c requests, we decided that the optimal approach would be looping over the chunks of data containing information for each pollutant, producing without repeting the code the outputs all in one step. First we create some variables that will be used in the loop: 
+Given the data structure and the subpoints a-c requests, we decided that the optimal approach would be looping over the chunks of data containing information for each pollutant, producing without repeting the code the outputs all in one step. First we create some variables that will be used in the loop: 
 
 ```{r results='hide', message=FALSE, warning=FALSE}
 #build 'index' for your loop
@@ -53,11 +54,17 @@ PC2<-data.frame(matrix(ncol=5,nrow=28))  # of the PC 1 and 2 for each pollutant 
 
 ```
 
+Then we run the loop that:
+1) Selects the chunk of the dataframe corresponding to one pollutant and puts it into shape
+2) Runs PCA on the reduced dataframe and produces the plots of the first two PCs
+3) Produces a scree plot  
+4) Computes the Bayesian Informatio Criteria and prints the optimal number of PCs according to this method 
+5) Stores plots and loadings for future use
 
+```{r results='hide', message=FALSE, warning=FALSE}
+mytheme <- theme(plot.title= element_text(face="bold",colour = "antiquewhite4",size = (16),hjust = 0.5)) #setting theme for plots
 
-```{r}
-#for (i in 1:5){
-i=4
+for (i in 1:5){
   #data chunk preparation
   begin<-index[i,1]
   end<-index[i,1]+28      #each chunk has 27 countries plus the first raw with years
@@ -78,26 +85,33 @@ i=4
   pr.out<-prcomp(dfx, scale=TRUE)
   #print(pr.out$rotation[,1:2])           # print first two PC loadings and plot first two PC
   graph<-autoplot(pr.out,variance_percentage=FALSE,loadings=TRUE,
-           loadings.label=TRUE,loadings.colour="coral",loadings.label.size=3,
-           loadings.label.colour="grey35",loadings.label.vjust = 1.2, scale=0,
-           colour="gold2") #+geom_text_repel()
-  print(graph)
+           loadings.label=TRUE,loadings.label.repel=TRUE,loadings.colour="coral",loadings.label.size=3,loadings.label.colour="grey35", scale=0,colour="gold2")+ggtitle(paste("The first two PCs for",toString(index[i,2]),"pollutant"))+mytheme 
+
   pve= 100* (pr.out$sdev ^2)/ sum(pr.out$sdev ^2)  #screeplot
-  scree<-plot(seq(from = 1, to = 28),pve, type ="o", ylab="PVE ", xlab=" Principal Component ",
-       col =" blue")
+  scree<- ggplot(data.frame(pve),aes("Principal Component", "Percentage of variance explained"))
   print(scree)
+    #plot(pve , type ="o", ylab="PVE ", xlab=" Principal Component ",
+       #col =" blue",axes = F)
+  #axis(side = 1, at = seq(from=0,to=30))
+  #axis(side = 2, at = seq(from=0,to=100,by=5))
+  #title(paste("Scree plot for PCs of",toString(index[i,2]),"pollutant"))
+  #grid()
   
   #compute vector of BIC for first 27 principal components
   BIC<-c(1:27)   #initialize a numeric vector to be filled with BIC(k) values. set max k=p-1
   for (j in 1:27) {
-    f<-pr.out$x[,1:j]%*%t(pr.out$rotation[,1:j]) #compute aF in X=aF+e
-    res_mat<-scale(dfx)-f                        #compute matrix of residuals
+    f<-t(pr.out$rotation[,1:j])%*%pr.out$x[,1:j] #compute aF in X=aF+e
+    res_mat<-dfx[,1:j]-f                  #compute matrix of residuals
     res_mat_sq<-res_mat*res_mat                  #square residuals
-    res<-(sum(rowSums(res_mat_sq))/28^2)         #residuals sum of squares
+    if (j==1){
+      res<-(sum(res_mat_sq)/(dim(dfx)[1]*dim(dfx)[2]))
+    } else{
+    res<-(sum(rowSums(res_mat_sq))/(dim(dfx)[1]*dim(dfx)[2]))         #residuals sum of squares
+    }
     k<-j
-    BICk<-log(res)+k*(log(28^2)/(28^2))          #BIC for each k
+    BICk<-log(res)+k*(log(min(dim(dfx)[1],dim(dfx)[2]))/(min(dim(dfx)[1],dim(dfx)[2]))) #BIC for each k
     BIC[j]<-BICk                                 #fill BIC vector at each iteration
-  }
+    }
   min<-min(BIC)
   num_pc<-match(min,BIC)                         #find and print k, the index of the min of BIC
   cat("According to the BIC criterion, the optimal number of principal components is ", num_pc)
@@ -123,9 +137,44 @@ i=4
   rm(dfx)
   rm(BIC)
   rm(pr.out)
-  
 }
 ```
+Now to comment on the results we can called the corresponding stored object.
+
+
+## d) 
+We plot the first 2 principal components for all the five pollutants over the time interval.
+
+Code to produce the plots:
+
+```{r results='hide', message=FALSE, warning=FALSE}
+theme2<-theme(axis.text.x = element_text(angle = 45, hjust=1))
+PC1["years"]<-c(1990:2017)
+PC1<-gather(PC1, `ammonia`, `largepart`, `nmvoc`,`smallpart`, `sulphur`, key = "pollutant", value = "value") #transform data to be plotted
+PC1_plot<-ggplot(PC1,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
+  geom_point(size = 2.25) +  geom_line(size = 1) +theme2 +mytheme+
+  labs(title = "Time trend PC1",x="Years",y="Value")
+
+PC2["years"]<-c(1990:2017)
+PC2<-gather(PC2, `ammonia`, `largepart`, `nmvoc`,      #transform data to be plotted
+            `smallpart`, `sulphur`, key = "pollutant", value = "value")
+PC2_plot<-ggplot(PC2,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
+  geom_point(size = 2.25) +  geom_line(size = 1) +theme2 +mytheme+
+  labs(title = "Time trend PC2",x="Years",y="Value")
+```
+
+Here is the plot of the first principal component over time for the five pollutant in the dataset:
+
+```{r message=FALSE, warning=FALSE}
+print(PC1_plot)
+```
+
+Here is the same plot for the second principal component:
+
+```{r message=FALSE, warning=FALSE}
+print(PC2_plot)
+```
+
 
 
 
