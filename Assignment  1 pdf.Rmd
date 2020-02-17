@@ -1,0 +1,142 @@
+---
+title: "Data Science Methods - Assignment 1"
+author:
+- "M. Alberti, 2020162"
+- "N.R. Ceschin" 
+
+date: February 21, 2020
+output: pdf_document
+
+---
+
+First we upload all relevant libraries:
+
+```{r results='hide', message=FALSE, warning=FALSE}
+library(readxl)
+library(ggplot2)
+library(ggfortify)
+library(dplyr)
+library(tidyr)
+library(RCurl)
+library(ggrepel)
+```
+
+Upload dataset:
+
+```{r results='hide', message=FALSE, warning=FALSE}
+setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments")
+#setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
+data<-read_excel("env_air_emis.xls")
+EU_labels<-read.csv("EU labels.csv", header = FALSE ,sep=";") #Short labelling of countries
+rownames(EU_labels)<-EU_labels[[1]]
+
+```
+
+After a quick glimpse of the data we realized that information for the five pollutant are presented in separated consecutive tables, the separation contains some information in the first column and NA cells in the rest. To be sure not to drop NAs in the middle of the dataset, we first proceed to drop all raws containing at least 5 NA values and we assign to *df*: 
+```{r results='hide', message=FALSE, warning=FALSE}
+dim(data)
+df<-data[rowSums(is.na(data))<length(data)-5,]
+#df<-data[complete.cases(data), ]
+
+```
+
+Given the data structure and the exercises a-c requests, we decided that the optimal approach would be looping over the chunks of data containing information for each pollutant, producing without repeting the code the outputs all in one step. First we create some variables that will be used in the loop: 
+
+```{r results='hide', message=FALSE, warning=FALSE}
+#build 'index' for your loop
+interval<-c(1,30,59,88,117)   #number of the first row of each individidual dataset 
+pollutants<-c("ammonia","nmvoc","smallpart","largepart","sulphur")
+index<-data.frame(interval,pollutants)
+
+PC1<-data.frame(matrix(ncol=5,nrow=28))  #empty data frames that will be filled with the scores
+PC2<-data.frame(matrix(ncol=5,nrow=28))  # of the PC 1 and 2 for each pollutant and country 
+
+```
+
+
+
+```{r}
+#for (i in 1:5){
+i=4
+  #data chunk preparation
+  begin<-index[i,1]
+  end<-index[i,1]+28      #each chunk has 27 countries plus the first raw with years
+  dfx<-df[begin:end,] #slice portion of the dataframe, 'according to begin' and 'end'
+  dfx<-as.data.frame(dfx) #rename first column with the name of the pollutant
+  colnames(dfx)<-dfx[1,]         #set first column as observations' names and first row as       variables' names
+  rownames(dfx)<-dfx[,1]
+  dfx<-dfx[c(2:29),c(2:29)]      #drop first column and obtain the final datset
+  if (sum(mapply(grepl,rownames(EU_labels),rownames(dfx)))==length(dfx)) {
+  rownames(dfx)<- EU_labels[[2]] 
+    } #Substitute name with short labels of the appropriate country
+  dfx<-as.data.frame(t(dfx))     #convert factor columns into numeric to apply prcomp
+  indx <- sapply(dfx, is.factor)
+  dfx[indx] <- lapply(dfx[indx], function(x) as.numeric(as.character(x)))
+  
+  
+  #Principal Component Analysis
+  pr.out<-prcomp(dfx, scale=TRUE)
+  #print(pr.out$rotation[,1:2])           # print first two PC loadings and plot first two PC
+  graph<-autoplot(pr.out,variance_percentage=FALSE,loadings=TRUE,
+           loadings.label=TRUE,loadings.colour="coral",loadings.label.size=3,
+           loadings.label.colour="grey35",loadings.label.vjust = 1.2, scale=0,
+           colour="gold2") #+geom_text_repel()
+  print(graph)
+  pve= 100* (pr.out$sdev ^2)/ sum(pr.out$sdev ^2)  #screeplot
+  scree<-plot(seq(from = 1, to = 28),pve, type ="o", ylab="PVE ", xlab=" Principal Component ",
+       col =" blue")
+  print(scree)
+  
+  #compute vector of BIC for first 27 principal components
+  BIC<-c(1:27)   #initialize a numeric vector to be filled with BIC(k) values. set max k=p-1
+  for (j in 1:27) {
+    f<-pr.out$x[,1:j]%*%t(pr.out$rotation[,1:j]) #compute aF in X=aF+e
+    res_mat<-scale(dfx)-f                        #compute matrix of residuals
+    res_mat_sq<-res_mat*res_mat                  #square residuals
+    res<-(sum(rowSums(res_mat_sq))/28^2)         #residuals sum of squares
+    k<-j
+    BICk<-log(res)+k*(log(28^2)/(28^2))          #BIC for each k
+    BIC[j]<-BICk                                 #fill BIC vector at each iteration
+  }
+  min<-min(BIC)
+  num_pc<-match(min,BIC)                         #find and print k, the index of the min of BIC
+  cat("According to the BIC criterion, the optimal number of principal components is ", num_pc)
+  
+  ###potential issue: smallest value for BIC is always the one with ###
+  ###the max number of principal components...strange!I checked the calculations###
+  ###and they seem fine. I think the issue is that the penalty part of BIC is really###
+  ###trivial compared to the log(SSR) part####
+  
+  #save first two PC in separate dataset for point d)
+  PC1[i]<-pr.out$x[,1]
+  colnames(PC1)[i]<-as.character(index[i,2])
+  PC2[i]<-pr.out$x[,2]
+  colnames(PC2)[i]<-as.character(index[i,2])
+  
+  #save relevant objects with their respective name
+  assign(paste0("BIC_", index[i,2]), BIC)
+  assign(paste0("df_", index[i,2]), dfx)
+  assign(paste0("prcomp_",index[i,2]),pr.out)
+  assign(paste0("Screeplot_",index[i,2]),scree)
+  assign(paste0("PC1-PC2_",index[i,2]),graph)
+  #remove non relevant objects
+  rm(dfx)
+  rm(BIC)
+  rm(pr.out)
+  
+}
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

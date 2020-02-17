@@ -3,6 +3,8 @@ library(readxl)
 library(ggplot2)
 library(ggfortify)
 library(dplyr)
+library(tidyr)
+library(RCurl)
 
 #set directory (non sono risucito a fare in modo di scaricare direttamente i dati dalla repo github)
 setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
