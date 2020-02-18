@@ -9,6 +9,8 @@ output: pdf_document
 
 ---
 
+## Question 1
+
 First we upload all relevant libraries:
 
 ```{r results='hide', message=FALSE, warning=FALSE}
@@ -104,22 +106,18 @@ for (i in 1:5){
     res_mat<-dfx[,1:j]-f                  #compute matrix of residuals
     res_mat_sq<-res_mat*res_mat                  #square residuals
     if (j==1){
-      res<-(sum(res_mat_sq)/(dim(dfx)[1]*dim(dfx)[2]))
+      res<-(sum(res_mat_sq)/(dim(dfx)[1]*dim(dfx)[2]))  #did separate for k=1 because of "rowSums"  
     } else{
     res<-(sum(rowSums(res_mat_sq))/(dim(dfx)[1]*dim(dfx)[2]))         #residuals sum of squares
     }
     k<-j
-    BICk<-log(res)+k*(log(min(dim(dfx)[1],dim(dfx)[2]))/(min(dim(dfx)[1],dim(dfx)[2]))) #BIC for each k
+    BICk<-log(res)+k*(log(28^2))/(28^2) #BIC for each k
     BIC[j]<-BICk                                 #fill BIC vector at each iteration
     }
   min<-min(BIC)
   num_pc<-match(min,BIC)                         #find and print k, the index of the min of BIC
   cat("According to the BIC criterion, the optimal number of principal components is ", num_pc)
   
-  ###potential issue: smallest value for BIC is always the one with ###
-  ###the max number of principal components...strange!I checked the calculations###
-  ###and they seem fine. I think the issue is that the penalty part of BIC is really###
-  ###trivial compared to the log(SSR) part####
   
   #save first two PC in separate dataset for point d)
   PC1[i]<-pr.out$x[,1]
@@ -174,6 +172,22 @@ Here is the same plot for the second principal component:
 ```{r message=FALSE, warning=FALSE}
 print(PC2_plot)
 ```
+
+
+## Question 2
+
+
+
+
+## Question 3
+
+a) $p_1(x)=\frac{Pr(Y=1)Pr(X=x|Y=1)}{\sum_{l=1}^K{Pr(Y=l)Pr(X=x|Y=1)}}$
+
+In this case we have that:
+- $\pi_k=Pr(Y=k)$ is prior probability for class k
+- $X|Y=k \sim f_k(x)=N(\mu_k,\sigma^2)$ is the distribution of X for each class k
+
+Using the Bayes rule to rewrite:
 
 
 
