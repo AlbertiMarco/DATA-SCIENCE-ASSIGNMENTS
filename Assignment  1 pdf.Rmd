@@ -26,8 +26,8 @@ library(ggrepel)
 Upload dataset:
 
 ```{r results='hide', message=FALSE, warning=FALSE}
-setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments")
-#setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
+#setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments")
+setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
 data<-read_excel("env_air_emis.xls")
 x <- getURL("https://raw.githubusercontent.com/AlbertiMarco/DATA-SCIENCE-ASSIGNMENTS/master/EU%20labels.csv")
 EU_labels<- read.csv(text = x, header = FALSE ,sep=";") #import country tags to make plots more readable
@@ -90,14 +90,13 @@ for (i in 1:5){
            loadings.label=TRUE,loadings.label.repel=TRUE,loadings.colour="coral",loadings.label.size=3,loadings.label.colour="grey35", scale=0,colour="gold2")+ggtitle(paste("The first two PCs for",toString(index[i,2]),"pollutant"))+mytheme 
 
   pve= 100* (pr.out$sdev ^2)/ sum(pr.out$sdev ^2)  #screeplot
-  scree<- ggplot(data.frame(pve),aes("Principal Component", "Percentage of variance explained"))
-  print(scree)
-    #plot(pve , type ="o", ylab="PVE ", xlab=" Principal Component ",
-       #col =" blue",axes = F)
-  #axis(side = 1, at = seq(from=0,to=30))
-  #axis(side = 2, at = seq(from=0,to=100,by=5))
-  #title(paste("Scree plot for PCs of",toString(index[i,2]),"pollutant"))
-  #grid()
+  #scree<- ggplot(data.frame(pve),aes("Principal Component", "Percentage of variance explained"))
+  scree<-plot(pve , type ="o", ylab="PVE ", xlab=" Principal Component ",
+       col =" blue",axes = F)
+  axis(side = 1, at = seq(from=0,to=30))
+  axis(side = 2, at = seq(from=0,to=100,by=5))
+  title(paste("Scree plot for PCs of",toString(index[i,2]),"pollutant"))
+  grid()
   
   #compute vector of BIC for first 27 principal components
   BIC<-c(1:27)   #initialize a numeric vector to be filled with BIC(k) values. set max k=p-1
@@ -139,6 +138,10 @@ for (i in 1:5){
 ```
 Now to comment on the results we can called the corresponding stored object.
 
+```{r}
+print(`PC1-PC2_ammonia`)
+
+```
 
 ## d) 
 We plot the first 2 principal components for all the five pollutants over the time interval.
@@ -181,23 +184,45 @@ print(PC2_plot)
 
 ## Question 3
 
-a) $p_1(x)=\frac{Pr(Y=1)Pr(X=x|Y=1)}{\sum_{l=1}^K{Pr(Y=l)Pr(X=x|Y=1)}}$
+a)  $p_1(x)=\frac{Pr(Y=1)Pr(X=x|Y=1)}{\sum_{l=1}^K{Pr(Y=l)Pr(X=x|Y=1)}}$
 
 In this case we have that:
-- $\pi_k=Pr(Y=k)$ is prior probability for class k
-- $X|Y=k \sim f_k(x)=N(\mu_k,\sigma^2)$ is the distribution of X for each class k
+
+* $\pi_k=Pr(Y=k)$ is prior probability for class k
+* $X|Y=k \sim f_k(x)=N(\mu_k,\sigma^2)$ is the distribution of X for each class k
 
 Using the Bayes rule to rewrite:
+$$p_{1}(x)=\frac{\pi_1f_1(x)}{\pi_1f_1(x)+\pi_2f_2(x)}$$
+In order to ease calculations in the next step, it is convenient to keep implicit the likelihood functions for the moment.
 
+b)  Plugging in the posterior probability of class 1 obtained in the previous point, we obtain:
+$$\log\left(\frac{p_1(x)}{1-p_1(x)}\right)=\log\left(\frac{\frac{\pi_1f_1(x)}{\pi_1f_1(x)+\pi_2f_2(x)}}{1-\frac{\pi_1f_1(x)}{\pi_1f_1(x)+\pi_2f_2(x)}}\right)=\log\left(\frac{\pi_1f_1(x)}{\pi_2f_2(x)}\right)$$
+We can now explicit the likelihood functions and simplify conveniently
+$$\log\left(\frac{p_1(x)}{1-p_1(x)}\right)=\log\left(\frac{\pi_1}{\pi_2}\right)+\log\left(\frac{f_1(X)}{f_2(x)}\right)=\log\left(\frac{\pi_1}{\pi_2}\right)+\log\left(\exp\left((x-\mu_1)^2-(x-\mu_2)^2\right)\right)$$
+$$=\log\left(\frac{\pi_1}{\pi_2}\right)-\frac{1}{2\sigma^2}(-2x\mu_1+\mu_{2}^2 +2x\mu_2-\mu_{2}^2)=\left[\log\left(\frac{\pi_1}{\pi_2}\right) + \frac{\mu_{2}^2-\mu_{1}^2}{2\sigma^2}\right]+x\left[\frac{\mu_1+\mu_2}{\sigma^2}\right]=$$
+Therefore, 
 
+* $c_0=\log\left(\frac{\pi_1}{\pi_2}\right) + \frac{\mu_{2}^2-\mu_{1}^2}{2\sigma^2}$
+* $c_1=\frac{\mu_1+\mu_2}{\sigma^2}$      
 
+c) This derivation helps us appreciating how these two classfication methods are closely related. In particular, the log-odds ratio is linear in $x$ in both cases. In the logit model, the parameters estimated by maximum-likelihood are exactly the intercept and the coefficient on the $x$, while in LDA $c_0$ and $c_1$ are functions on the prior probabilities and of the paramters of the likelihood functions $\mu_1,\mu_2,\sigma^2$. We could conclude that the parameters estimated by the logit model are somehow *reduced forms* of those of LDA.
 
+d) Knowing that the Bayes classifier assigns an observation $X = x$ to the class k for which the posterior probability $P(Y = k|X = x)$ is the largest, we start by calculating the posterior probability of beloning to a generic class:
 
+$$p_k(k)=\frac{Pr(Y=k)Pr(X=x|Y=k)}{\sum_{l=1}^K{Pr(Y=l)Pr(X=x|Y=1)}}=\frac{\pi_kf_k(x)}{\sum_{l=1}^K \pi_lf_l(x)}$$
 
+Therefore, the Bayes classifier assign $X=x$ to class 1 if $p_1(x)>p_2(x)$, that is equivalent to $\frac{p_1(x)}{p_2(x)}>1$. Therefore, we can restate this rule as
+$$\frac{p_1(x)}{p_2(x)}=\frac{\frac{\pi_1f_1(x)}{\sum_{l=1}^K \pi_lf_l(x)}}{\frac{\pi_2f_2(x)}{\sum_{l=1}^K \pi_lf_l(x)}}=\frac{\pi_1f_1(x)}{\pi_2f_2(x)}>1$$
 
+By making the density function explicit and taking the logarithm of both numerator and denominator, the first constant term of the density function simplifies and we are left with
+$$\frac{-\frac{1}{2}\left(x^T\Sigma^{-1}x-2x^{T}\Sigma^{-1}\mu_1+\mu_1^{T}\Sigma^{-1}\mu_1\right)+\log(\pi_1)}{-\frac{1}{2}\left(x^T\Sigma^{-1}x-2x^{T}\Sigma^{-1}\mu_2+\mu_2^{T}\Sigma^{-1}\mu_2\right)+\log(\pi_2)}>1$$
 
+Which corresponds to 
+$$-\frac{1}{2}(x^T\Sigma^{-1}x)+x^{T}\Sigma^{-1}\mu_1-\frac{1}{2}(\mu_1^{T}\Sigma^{-1}\mu_1)+\log(\pi_1)>-\frac{1}{2}(x^T\Sigma^{-1}x)+x^{T}\Sigma^{-1}\mu_2-\frac{1}{2}(\mu_2^{T}\Sigma^{-1}\mu_2)+\log(\pi_2)$$
+$$\iff$$
+$$x^{T}\Sigma^{-1}\mu_1-\frac{1}{2}(\mu_1^{T}\Sigma^{-1}\mu_1)+\log(\pi_1)>x^{T}\Sigma^{-1}\mu_2-\frac{1}{2}(\mu_2^{T}\Sigma^{-1}\mu_2)+\log(\pi_2)$$
 
-
+Which corresponds exactly to $\delta_1(x)>\delta_2(x).$
 
 
 
