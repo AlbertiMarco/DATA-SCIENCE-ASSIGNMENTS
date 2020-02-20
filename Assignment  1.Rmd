@@ -70,7 +70,7 @@ mytheme <- theme(plot.title= element_text(face="bold",
   colour = "antiquewhite4",size = (16),hjust = 0.5))     #setting theme for plots
 
 for (i in 1:5){
-  #data chunk preparation
+  #Data chunk preparation#
   begin<-index[i,1]                        #select the right range to cut main dataset
   end<-index[i,1]+28                       
   dfx<-df[begin:end,]
@@ -90,18 +90,20 @@ for (i in 1:5){
   pr.out<-prcomp(dfx, scale=TRUE)
   graph<-autoplot(pr.out,variance_percentage=FALSE,loadings=TRUE,
            loadings.label=TRUE,loadings.label.repel=TRUE,loadings.colour="coral",
-           loadings.label.size=3,loadings.label.colour="grey35",scale=0,colour="gold2")+
+           loadings.label.size=3,loadings.label.colour="grey35",scale=TRUE,colour="gold2")+
            ggtitle(paste("The first two PCs for",toString(index[i,2]),"pollutant"))+
            mytheme
-  pve= 100* (pr.out$sdev ^2)/ sum(pr.out$sdev ^2)             #screeplot
+
+  #Screeplot#
+  pve= 100* (pr.out$sdev ^2)/ sum(pr.out$sdev ^2)             
   pvedf<-as.data.frame(pve)
   pvedf["PC"]<-c(1:28)
   scree<-ggplot(pvedf, aes(x=factor(PC),y=pve, group=1))+
     geom_point(size =2.25,color="blue")+geom_line(size = 1,color="blue")+
-    labs(title="Screeplot", x="Number of principal components",
-    y="Proportion of variance explained")
+    labs(x="Number of principal components",y="Proportion of variance explained")+
+    ggtitle(paste("Screeplot for PCs of ",toString(index[i,2]))) + mytheme
 
-  #compute vector of BIC for first 27 principal components
+  #Compute vector of BIC for first 27 principal components#
   BIC<-c(1:27)   
   for (j in 1:27) {
     f<-pr.out$x[,1:j]%*%t(pr.out$rotation[,1:j]) #compute aF in X=aF+e
@@ -120,13 +122,13 @@ for (i in 1:5){
   num_pc<-match(min,BIC)                         #number of PC selected by BIC
 
 
-  #save first two PC in separate dataset for point d)
+  #Save first two PC in separate dataset for point d)#
   PC1[i]<-pr.out$x[,1]
   colnames(PC1)[i]<-as.character(index[i,2])
   PC2[i]<-pr.out$x[,2]
   colnames(PC2)[i]<-as.character(index[i,2])
 
-  #save relevant objects with their respective name for each pollutant
+  #save relevant objects with their respective name for each pollutant#
   assign(paste0("BIC_", index[i,2]), BIC)       #vector of BIC
   assign(paste0("df_", index[i,2]), dfx)        #dataset
   assign(paste0("prcomp_",index[i,2]),pr.out)   #output of prcomp
@@ -142,16 +144,53 @@ for (i in 1:5){
   rm(scree)
 }
 ```
-Now to comment on the results we can called the corresponding stored object.
+Now to answer a)-d) questions we just call the relevant  stored object.
+
+\pagebreak
+
+## a)
 
 ```{r}
- print("PC1-PC2_sulphur")
+print(`PC1-PC2_sulphur`)
+
 ```
+Were we to disregard the statistical pitfalls of this exercise, we can interpret the results from this plot as follows. To ease our analysis, we will present as well some basic descriptive statistics of the first two principal components' loadings.
+```{r}
+summary(prcomp_sulphur$rotation[,1])
+```
+At a first glance, we notice that the loadings on the first principal component are extremly stable in their magnitude. They range from -0.205 to -0.068, but 75% of them lies between -0.20 and -0.18. In line with the interpretation perspective presented in class as well as in the book *An Introduction to Statistical Learning*, this result doesn't help to draw any meaningful conclusion. According  to this view, a principal component "represents" the subset of variables for which its loadings are higher. However, in this case there is no variable whose corresponing loading stands out for its particular magnitude (relative to the others). Hence, we cannot say whether this component "corresponds" to a particular subset of variables.
+```{r}
+summary(prcomp_sulphur$rotation[,2])
+```
+The second vector of loadings displays a completely different situation. The range of variability is definitely larger (from -0.46 to 0.23), with a vector of loadings with both positive and negative values. ALso, these coefficients are more uniformely distributed along this range. In line with the previous interpretation perspective, we can conlude that the second principal component "corresponds" to the set of countries whose loadings are the highest. At a first glance, the countries which display higher values are all from northern Europe, while those displaying lower values are all from southern Europe. Needless to say, this is just a rough visual analysis and futher investigation would be necessary in order to understan which is the real driver of these values.
+
+The problem which arises when we interpret principal components' scores and loadings is that they are usually identified only up to a rotation. In view of a more general "factor model" as $X=F\Lambda^{'}+e$, principal components analysis estimates doesn't esimate $F$ and $\Lambda$, but $FH$ ( a rotation of $F$) and $\Lambda H^{'-1}$ (a rotation of $\Lambda$). This means that it is not possible to interpret straightforwardly signs and magnitudes of the estimated factor and factors loadings. Bai and Ng (2012) provides a set of assumptions under which this is possible. Indeed, were these assumptions to hold for $F$ anf $\Lambda$, the corrisponding rotation matrix would be asymptotically an identity matrix. Hence, we would achieve exact identification. However, due to the very tiny dimension of the datset under analysis, we can conclude immediately that those assumptions don't hold here.
+
+As a final point, we remind that what we try to achieve when running a PCA is indeed to estimate factors and factors' loadings of a factor model. This model assumes that our data can be summarized by a linear combination of few variables (factors) plus an error term that is uncorrelated with these variables. PCA aims at providing a solution to factors models.
+
+\pagebreak
+
+## b)
+```{r}
+print(Screeplot_sulphur)
+```
+
+Based on the screeplot, it would be straightforward to choose only one principal component. This derives from the fact that the first principal component explains more than 80% of the total variance of all the principal components. The variance explained by the second one amounts only to 10% while that explained by the rest of principal components is trivial. However, this conclusion may not be reliable. Indeed, it is worth to remember that these values are random variables and they can change were other samples to be drawn. It is possible to implement some statistical tests in order to understand, for example, whether two principal components explain the same proportion of the total variance or not, but these kind of tests are usually extremly complicated, also due to the fact that the distribution of these random variables are difficult to handle.
+
+## c)
+```{r}
+cat("According to the BIC criterion, the optimal number of principal components is ",
+    num_pc_sulphur)
+```
+The conclusion we draw by using the BIC criterion is completely at odds with that we drawn from the analysis of the screeplot. The BIC picks the maximum number of principal components available (given the restriction $k<p$), while in the previous point we appreciated that all the princiapl components from 2 to 27 explain a trivial part of the total variance. By looking more closely at how the BIC is computed in this case, we notice that this result is due to the fact that while the "fit" part decreases rapidly and monotonically as the number of principal components increases, the "penalty" part is rather stable. Hence, the model with the maximum number of principal components presents the lowest BIC. This fact is common to all the pollutants. A first hypothesis to try to rationalize this result is that we know that the BIC criterion is an asymptotic technique. Namely, we know that the probablilty that the number of principal components selected by the BIC is the true nuumber of principal components of the model approaches 1 only for very large numbers of observations and variables. The datasets provided clearly don't meet this condition. We can then conclude that one of the reasons why the BIC criterion yields such a strange result in this case is that a fundamental assumption is violated.
+
+```{r}
 
 
 ```{r}
 print(`PC1-PC2_ammonia`)
 ```
+
 
 ## d)
 We plot the first 2 principal components for all the five pollutants over the time interval.
@@ -160,8 +199,10 @@ Code to produce the plots:
 
 ```{r results='hide', message=FALSE, warning=FALSE}
 theme2<-theme(axis.text.x = element_text(angle = 45, hjust=1))
+
 PC1["years"]<-c(1990:2017)
-PC1<-gather(PC1, `ammonia`, `largepart`, `nmvoc`,`smallpart`, `sulphur`, key = "pollutant", value = "value") #transform data to be plotted
+PC1<-gather(PC1, `ammonia`, `largepart`, `nmvoc`,
+            `smallpart`, `sulphur`, key = "pollutant", value = "value")  
 PC1_plot<-ggplot(PC1,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
   geom_point(size = 2.25) +  geom_line(size = 1) +theme2 +mytheme+
   labs(title = "PC1",x="Years",y="Value")
@@ -174,17 +215,21 @@ PC2_plot<-ggplot(PC2,aes(x=factor(years),y=value, group=pollutant,color=pollutan
   labs(title = "PC2",x="Years",y="Value")
 ```
 
-Here is the plot of the first principal component over time for the five pollutant in the dataset:
+\pagebreak
 
 ```{r message=FALSE, warning=FALSE}
 print(PC1_plot)
 ```
 
-Here is the same plot for the second principal component:
+By plotting the values of the first principal component for all the pollutants, we can immediately appreciate how the trends of all of them are extremly similar, increasing monotoniclaly and linearly. The fact that they are alike even in levels is porbably due to the fact that all the five datasets have been rescaled before running the PCA.
+
+\pagebreak
 
 ```{r message=FALSE, warning=FALSE}
 print(PC2_plot)
 ```
+
+Looking at the second principal component, we notice a different situation: while the trend and the level of four pollutants are again extremly similar (more u-shaped this time) that of ammonia behaves in a completely opposite way. Indeed, it appears almost exaclty complementary to that of the other four pollutants.
 
 ## Question 2
 A factor model is defined as:
