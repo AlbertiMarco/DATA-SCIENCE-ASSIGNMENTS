@@ -100,8 +100,8 @@ for (i in 1:5){
   pvedf["PC"]<-c(1:28)
   scree<-ggplot(pvedf, aes(x=factor(PC),y=pve, group=1))+
     geom_point(size =2.25,color="blue")+geom_line(size = 1,color="blue")+
-    labs(title="Screeplot", x="Number of principal components", 
-    y="Proportion of variance explained")
+    labs(x="Number of principal components",y="Proportion of variance explained")+
+    ggtitle(paste("Screeplot for PCs of ",toString(index[i,2]))) + mytheme
   
   #Compute vector of BIC for first 27 principal components#
   BIC<-c(1:27)   
@@ -148,7 +148,7 @@ Now to answer a)-d) questions we just call the relevant  stored object.
 
 \pagebreak
 
-a)
+## a)
 
 ```{r}
 print(`PC1-PC2_sulphur`)
@@ -168,12 +168,27 @@ The problem which arises when we interpret principal components' scores and load
 
 As a final point, we remind that what we try to achieve when running a PCA is indeed to estimate factors and factors' loadings of a factor model. This model assumes that our data can be summarized by a linear combination of few variables (factors) plus an error term that is uncorrelated with these variables. PCA aims at providing a solution to factors models.
 
+\pagebreak
+
 ## b)
 ```{r}
 print(Screeplot_sulphur)
 ```
 
 Based on the screeplot, it would be straightforward to choose only one principal component. This derives from the fact that the first principal component explains more than 80% of the total variance of all the principal components. The variance explained by the second one amounts only to 10% while that explained by the rest of principal components is trivial. However, this conclusion may not be reliable. Indeed, it is worth to remember that these values are random variables and they can change were other samples to be drawn. It is possible to implement some statistical tests in order to understand, for example, whether two principal components explain the same proportion of the total variance or not, but these kind of tests are usually extremly complicated, also due to the fact that the distribution of these random variables are difficult to handle.
+
+## c)
+```{r}
+cat("According to the BIC criterion, the optimal number of principal components is ",
+    num_pc_sulphur)
+```
+The conclusion we draw by using the BIC criterion is completely at odds with that we drawn from the analysis of the screeplot. The BIC picks the maximum number of principal components available (given the restriction $k<p$), while in the previous point we appreciated that all the princiapl components from 2 to 27 explain a trivial part of the total variance. By looking more closely at how the BIC is computed in this case, we notice that this result is due to the fact that while the "fit" part decreases rapidly and monotonically as the number of principal components increases, the "penalty" part is rather stable. Hence, the model with the maximum number of principal components presents the lowest BIC. This fact is common to all the pollutants. A first hypothesis to try to rationalize this result is that we know that the BIC criterion is an asymptotic technique. Namely, we know that the probablilty that the number of principal components selected by the BIC is the true nuumber of principal components of the model approaches 1 only for very large numbers of observations and variables. The datasets provided clearly don't meet this condition. We can then conclude that one of the reasons why the BIC criterion yields such a strange result in this case is that a fundamental assumption is violated.
+
+```{r}
+
+```
+
+
 ## d) 
 We plot the first 2 principal components for all the five pollutants over the time interval.
 
@@ -181,8 +196,10 @@ Code to produce the plots:
 
 ```{r results='hide', message=FALSE, warning=FALSE}
 theme2<-theme(axis.text.x = element_text(angle = 45, hjust=1))
+
 PC1["years"]<-c(1990:2017)
-PC1<-gather(PC1, `ammonia`, `largepart`, `nmvoc`,`smallpart`, `sulphur`, key = "pollutant", value = "value") #transform data to be plotted
+PC1<-gather(PC1, `ammonia`, `largepart`, `nmvoc`,
+            `smallpart`, `sulphur`, key = "pollutant", value = "value")  
 PC1_plot<-ggplot(PC1,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
   geom_point(size = 2.25) +  geom_line(size = 1) +theme2 +mytheme+
   labs(title = "PC1",x="Years",y="Value")
@@ -195,18 +212,21 @@ PC2_plot<-ggplot(PC2,aes(x=factor(years),y=value, group=pollutant,color=pollutan
   labs(title = "PC2",x="Years",y="Value")
 ```
 
-Here is the plot of the first principal component over time for the five pollutant in the dataset:
+\pagebreak
 
 ```{r message=FALSE, warning=FALSE}
 print(PC1_plot)
 ```
 
-Here is the same plot for the second principal component:
+By plotting the values of the first principal component for all the pollutants, we can immediately appreciate how the trends of all of them are extremly similar, increasing monotoniclaly and linearly. The fact that they are alike even in levels is porbably due to the fact that all the five datasets have been rescaled before running the PCA.
+
+\pagebreak
 
 ```{r message=FALSE, warning=FALSE}
 print(PC2_plot)
 ```
 
+Looking at the second principal component, we notice a different situation: while the trend and the level of four pollutants are again extremly similar (more u-shaped this time) that of ammonia behaves in a completely opposite way. Indeed, it appears almost exaclty complementary to that of the other four pollutants.
 
 ## Question 2
 
