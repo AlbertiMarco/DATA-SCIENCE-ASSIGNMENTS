@@ -2,7 +2,7 @@
 title: "Data Science Methods - Assignment 1"
 author:
 - "M. Alberti, 2020162"
-- "N. Ceschin, 344510" 
+- "N. Ceschin, 344510"  
 
 date: February 21, 2020
 output: pdf_document
@@ -70,7 +70,7 @@ mytheme <- theme(plot.title= element_text(face="bold",
   colour = "antiquewhite4",size = (16),hjust = 0.5))     #setting theme for plots
 
 for (i in 1:5){
-  #data chunk preparation
+  #Data chunk preparation#
   begin<-index[i,1]                        #select the right range to cut main dataset
   end<-index[i,1]+28                       
   dfx<-df[begin:end,] 
@@ -86,14 +86,16 @@ for (i in 1:5){
   dfx[indx] <- lapply(dfx[indx], function(x) as.numeric(as.character(x)))
   
   
-  #Principal Component Analysis
+  #Principal Component Analysis#
   pr.out<-prcomp(dfx, scale=TRUE)
   graph<-autoplot(pr.out,variance_percentage=FALSE,loadings=TRUE,
            loadings.label=TRUE,loadings.label.repel=TRUE,loadings.colour="coral",
-           loadings.label.size=3,loadings.label.colour="grey35",scale=0,colour="gold2")+
+           loadings.label.size=3,loadings.label.colour="grey35",scale=TRUE,colour="gold2")+
            ggtitle(paste("The first two PCs for",toString(index[i,2]),"pollutant"))+
            mytheme 
-  pve= 100* (pr.out$sdev ^2)/ sum(pr.out$sdev ^2)             #screeplot
+  
+  #Screeplot#
+  pve= 100* (pr.out$sdev ^2)/ sum(pr.out$sdev ^2)             
   pvedf<-as.data.frame(pve)
   pvedf["PC"]<-c(1:28)
   scree<-ggplot(pvedf, aes(x=factor(PC),y=pve, group=1))+
@@ -101,7 +103,7 @@ for (i in 1:5){
     labs(title="Screeplot", x="Number of principal components", 
     y="Proportion of variance explained")
   
-  #compute vector of BIC for first 27 principal components
+  #Compute vector of BIC for first 27 principal components#
   BIC<-c(1:27)   
   for (j in 1:27) {
     f<-pr.out$x[,1:j]%*%t(pr.out$rotation[,1:j]) #compute aF in X=aF+e
@@ -120,13 +122,13 @@ for (i in 1:5){
   num_pc<-match(min,BIC)                         #number of PC selected by BIC
   
   
-  #save first two PC in separate dataset for point d)
+  #Save first two PC in separate dataset for point d)#
   PC1[i]<-pr.out$x[,1]
   colnames(PC1)[i]<-as.character(index[i,2])
   PC2[i]<-pr.out$x[,2]
   colnames(PC2)[i]<-as.character(index[i,2])
   
-  #save relevant objects with their respective name for each pollutant
+  #save relevant objects with their respective name for each pollutant#
   assign(paste0("BIC_", index[i,2]), BIC)       #vector of BIC
   assign(paste0("df_", index[i,2]), dfx)        #dataset
   assign(paste0("prcomp_",index[i,2]),pr.out)   #output of prcomp
@@ -142,13 +144,36 @@ for (i in 1:5){
   rm(scree)
 }
 ```
-Now to comment on the results we can called the corresponding stored object.
+Now to answer a)-d) questions we just call the relevant  stored object.
+
+\pagebreak
+
+a)
 
 ```{r}
-print(`PC1-PC2_ammonia`)
+print(`PC1-PC2_sulphur`)
 
 ```
+Were we to disregard the statistical pitfalls of this exercise, we can interpret the results from this plot as follows. To ease our analysis, we will present as well some basic descriptive statistics of the first two principal components' loadings.
+```{r}
+summary(prcomp_sulphur$rotation[,1])
+```
+At a first glance, we notice that the loadings on the first principal component are extremly stable in their magnitude. They range from -0.205 to -0.068, but 75% of them lies between -0.20 and -0.18. In line with the interpretation perspective presented in class as well as in the book *An Introduction to Statistical Learning*, this result doesn't help to draw any meaningful conclusion. According  to this view, a principal component "represents" the subset of variables for which its loadings are higher. However, in this case there is no variable whose corresponing loading stands out for its particular magnitude (relative to the others). Hence, we cannot say whether this component "corresponds" to a particular subset of variables.
+```{r}
+summary(prcomp_sulphur$rotation[,2])
+```
+The second vector of loadings displays a completely different situation. The range of variability is definitely larger (from -0.46 to 0.23), with a vector of loadings with both positive and negative values. ALso, these coefficients are more uniformely distributed along this range. In line with the previous interpretation perspective, we can conlude that the second principal component "corresponds" to the set of countries whose loadings are the highest. At a first glance, the countries which display higher values are all from northern Europe, while those displaying lower values are all from southern Europe. Needless to say, this is just a rough visual analysis and futher investigation would be necessary in order to understan which is the real driver of these values.
 
+The problem which arises when we interpret principal components' scores and loadings is that they are usually identified only up to a rotation. In view of a more general "factor model" as $X=F\Lambda^{'}+e$, principal components analysis estimates doesn't esimate $F$ and $\Lambda$, but $FH$ ( a rotation of $F$) and $\Lambda H^{'-1}$ (a rotation of $\Lambda$). This means that it is not possible to interpret straightforwardly signs and magnitudes of the estimated factor and factors loadings. Bai and Ng (2012) provides a set of assumptions under which this is possible. Indeed, were these assumptions to hold for $F$ anf $\Lambda$, the corrisponding rotation matrix would be asymptotically an identity matrix. Hence, we would achieve exact identification. However, due to the very tiny dimension of the datset under analysis, we can conclude immediately that those assumptions don't hold here. 
+
+As a final point, we remind that what we try to achieve when running a PCA is indeed to estimate factors and factors' loadings of a factor model. This model assumes that our data can be summarized by a linear combination of few variables (factors) plus an error term that is uncorrelated with these variables. PCA aims at providing a solution to factors models.
+
+## b)
+```{r}
+print(Screeplot_sulphur)
+```
+
+Based on the screeplot, it would be straightforward to choose only one principal component. This derives from the fact that the first principal component explains more than 80% of the total variance of all the principal components. The variance explained by the second one amounts only to 10% while that explained by the rest of principal components is trivial. However, this conclusion may not be reliable. Indeed, it is worth to remember that these values are random variables and they can change were other samples to be drawn. It is possible to implement some statistical tests in order to understand, for example, whether two principal components explain the same proportion of the total variance or not, but these kind of tests are usually extremly complicated, also due to the fact that the distribution of these random variables are difficult to handle.
 ## d) 
 We plot the first 2 principal components for all the five pollutants over the time interval.
 
