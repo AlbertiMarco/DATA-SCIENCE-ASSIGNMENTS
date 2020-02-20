@@ -139,6 +139,11 @@ for (i in 1:5){
 ```
 Now to comment on the results we can called the corresponding stored object.
 
+```{r}
+print("PC1-PC2_sulphur")
+```
+
+
 
 ## d) 
 We plot the first 2 principal components for all the five pollutants over the time interval.
@@ -173,10 +178,56 @@ Here is the same plot for the second principal component:
 print(PC2_plot)
 ```
 
-
 ## Question 2
+A factor model is defined as:
 
+\[X_{ij}=\alpha_{j1}f_{i1}+\alpha_{j2}f_{i2}+...+\alpha_{jr}f_{ir}+\epsilon_{ij}=\alpha_j^Tf_i+\epsilon_{ij}\]
 
+with i=1,...,n ; j=1,...,p and r number of factors $f_i=\begin{bmatrix} f_{i1}\\ f_{i2} \\ \vdots \\ f_{ir} \end{bmatrix}$ and $\alpha_j=\begin{bmatrix} \alpha_{j1} & .. & \alpha_{jr} \end{bmatrix}$
+
+In matrix form we can write: 
+\[\underset{n\times p}{X}=\underset{n\times r}{F}\underset{r\times p}{B^T}+\underset{n\times p}{\epsilon}\]
+
+In general the expression above is not identified since we don't observe neither $B$ nor $F$. If we consider a particular rotation matrix $H$, with $H^TH=I_r$ then we can rewrite the equation above as:
+\[X=\underbrace{FH}_{F^*} \underbrace{H^TB^T}_{B^*}+\epsilon\]
+
+In the particular case of PCA, the NIPALS algorithm can find a unique solution because PCA imposes a specific rotation matrix H. In particular, the rotation matrix imposes restrictions on B, on one hand $\frac{r(1-r)}{2}$ restrictions of orthogonality of the loadings and r on the norm of the loadings (normalization):
+
+(i) $a_ia_j=0$ when $a_i\neq a_j$
+
+(ii) $a^T_ia_i=1$
+
+Of course the PCA solution is just one of the possibles, any restrictions that identify the model can lead to a unique solution(for example restrictions on the factors instead). 
+
+In a factor model we believe that observed variables (Xs) are linear combinations of a limited number of underlying and unique factors (Zs); whereas in PCA component scores (Zs) are a linear combination of the observed variables (Xs) weighted by eigenvectors.
+The relationship between the two can be summarized by:
+\[ XH=UDH^TH=UD=Z \]
+with $U^TH=I_p$ , $H^TH=HH^T=I_p$ , $D=diag(d)$ of size $p\times p$.
+This shows that there is a transformation matrix (inverse of H, which in the case of orthogonal H is equal to $H^T$) for which the explanatory variables are linear combinations of the unobserved unique factors Z. 
+
+### Concistency of NIPALS Algorithm and factor analysis
+
+In class we have seen how the NIPALS algorithm can be used to consistently estimate the scores in a principal components analysis (PCA) when the traditional optimization approach fails or is inefficient given the large number of parameters (p). In particular, we limited ourselves to the case in which $n>p$ and the matrix D of eigenvalues has rank p.  
+The starting point is \[X=F^*B^*+\epsilon\]
+Under the assumptions:
+
+1. $\epsilon_{ij}$ are iid over i and j (can be relaxed to weakly dependent)
+
+2. \[E||f_i||^4 < M \] 
+\[ \frac{1}{n}\sum_{i=1}^{\infty} f_if_i^T \overset{p}{\longrightarrow}\Sigma_F \] which is a positive definite matrix of constants. This assumption is related to saying that the matrix D of eigenvalues has rank p, since positive definiteness for a symmetric matrix can be defined as having a diagonal of non-zero elements
+
+3. $f_{ij}$, $\epsilon_{ij}$ are independent for all j (Exogeneity Assumption)
+
+4. $\underset{r \times r}{H}$ is defined as above (r are restrictions)
+
+Given these assumptions we can consistently estimate $F^*=FH$ by $\hat{F}$ meaning that we have:
+
+1. $\hat{f_i}\overset{p}{\longrightarrow} Hf_i$ pointwise consistency 
+
+2. $min(\sqrt{n},\sqrt{p})[\hat{f_i}-Hf_i] \overset{d}{\longrightarrow} N(0,HV(f_i)H^T)$
+  for $min(\sqrt{n},\sqrt{p})\to \infty$
+
+If the assumptions 1-4 are met, also NIPALS method with the PCA restrictions can identify a factor model up to a rotation matrix H. Notice that for consistency to hold, we need both the number of observations n and the number of variables p to be large.
 
 
 ## Question 3
