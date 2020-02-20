@@ -29,10 +29,9 @@ Upload dataset:
 #setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments")
 setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
 data<-read_excel("env_air_emis.xls")
-urlRemote<-"https://raw.githubusercontent.com/"
+urlRemote<-"https://raw.githubusercontent.com/" 
 pathGithub<-"AlbertiMarco/DATA-SCIENCE-ASSIGNMENTS/master/EU%20labels.csv"
-x <- paste0(urlRemote, pathGithub)
-#import country tags to make plots more readable
+x <- getURL(paste0(urlRemote, pathGithub))      #country tags to make plots more readable
 EU_labels<- read.csv(text = x, header = FALSE ,sep=";") 
 rownames(EU_labels)<-EU_labels[[1]]
 
