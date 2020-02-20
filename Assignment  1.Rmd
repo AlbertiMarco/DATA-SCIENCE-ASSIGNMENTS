@@ -2,7 +2,7 @@
 title: "Data Science Methods - Assignment 1"
 author:
 - "M. Alberti, 2020162"
-- "N.R. Ceschin" 
+- "N. Ceschin, 344510"
 
 date: February 21, 2020
 output: pdf_document
@@ -26,126 +26,134 @@ library(ggrepel)
 Upload dataset:
 
 ```{r results='hide', message=FALSE, warning=FALSE}
-setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments")
-#setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
+#setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments")
+setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
 data<-read_excel("env_air_emis.xls")
-x <- getURL("https://raw.githubusercontent.com/AlbertiMarco/DATA-SCIENCE-ASSIGNMENTS/master/EU%20labels.csv")
-EU_labels<- read.csv(text = x, header = FALSE ,sep=";") #import country tags to make plots more readable
+urlRemote<-"https://raw.githubusercontent.com/"
+pathGithub<-"AlbertiMarco/DATA-SCIENCE-ASSIGNMENTS/master/EU%20labels.csv"
+x <- getURL(paste0(urlRemote, pathGithub))      #country tags to make plots more readable
+EU_labels<- read.csv(text = x, header = FALSE ,sep=";")
 rownames(EU_labels)<-EU_labels[[1]]
 
 ```
 
-After a quick glimpse of the data we realized that information for the five pollutant are presented in separated consecutive tables, the separation contains some information in the first column and NA cells in the rest. To be sure not to drop NAs in the middle of the dataset, we first proceed to drop all raws containing at least 5 NA values and we assign to *df*: 
+After a quick glimpse of the data we realized that information for the five pollutant are presented in separated consecutive tables, the separation contains some information in the first column and NA cells in the rest. To be sure not to drop NAs in the middle of the dataset, we first proceed to drop all raws containing at least 5 NA values and we assign to *df*:
 ```{r results='hide', message=FALSE, warning=FALSE}
 dim(data)
 df<-data[rowSums(is.na(data))<length(data)-5,]
-#df<-data[complete.cases(data), ]
 
 ```
 
-Given the data structure and the subpoints a-c requests, we decided that the optimal approach would be looping over the chunks of data containing information for each pollutant, producing without repeting the code the outputs all in one step. First we create some variables that will be used in the loop: 
+Given the data structure and the subpoints a-c requests, we decided that the optimal approach would be looping over the chunks of data containing information for each pollutant, producing without repeting the code the outputs all in one step. First we create some variables that will be used in the loop:
 
 ```{r results='hide', message=FALSE, warning=FALSE}
 #build 'index' for your loop
-interval<-c(1,30,59,88,117)   #number of the first row of each individidual dataset 
+interval<-c(1,30,59,88,117)               #first row of each datset
 pollutants<-c("ammonia","nmvoc","smallpart","largepart","sulphur")
 index<-data.frame(interval,pollutants)
 
-PC1<-data.frame(matrix(ncol=5,nrow=28))  #empty data frames that will be filled with the scores
-PC2<-data.frame(matrix(ncol=5,nrow=28))  # of the PC 1 and 2 for each pollutant and country 
+PC1<-data.frame(matrix(ncol=5,nrow=28))   #dataframes to be filled with PC1-2
+PC2<-data.frame(matrix(ncol=5,nrow=28))  
 
 ```
 
 Then we run the loop that:
+
 1) Selects the chunk of the dataframe corresponding to one pollutant and puts it into shape
 2) Runs PCA on the reduced dataframe and produces the plots of the first two PCs
-3) Produces a scree plot  
-4) Computes the Bayesian Informatio Criteria and prints the optimal number of PCs according to this method 
+3) Produces a scree plot
+4) Computes the Bayesian Informatio Criteria and prints the optimal number of PCs according to this method
 5) Stores plots and loadings for future use
 
-```{r results='hide', message=FALSE, warning=FALSE}
-mytheme <- theme(plot.title= element_text(face="bold",colour = "antiquewhite4",size = (16),hjust = 0.5)) #setting theme for plots
+```{r results='hide', message=FALSE, warning=FALSE, plot=FALSE}
+mytheme <- theme(plot.title= element_text(face="bold",
+  colour = "antiquewhite4",size = (16),hjust = 0.5))     #setting theme for plots
 
 for (i in 1:5){
   #data chunk preparation
-  begin<-index[i,1]
-  end<-index[i,1]+28      #each chunk has 27 countries plus the first raw with years
-  dfx<-df[begin:end,] #slice portion of the dataframe, 'according to begin' and 'end'
-  dfx<-as.data.frame(dfx) #rename first column with the name of the pollutant
-  colnames(dfx)<-dfx[1,]         #set first column as observations' names and first row as       variables' names
+  begin<-index[i,1]                        #select the right range to cut main dataset
+  end<-index[i,1]+28                       
+  dfx<-df[begin:end,]
+  dfx<-as.data.frame(dfx)
+  colnames(dfx)<-dfx[1,]         
   rownames(dfx)<-dfx[,1]
-  dfx<-dfx[c(2:29),c(2:29)]      #drop first column and obtain the final datset
+  dfx<-dfx[c(2:29),c(2:29)]                #drop first column and row
   if (sum(mapply(grepl,rownames(EU_labels),rownames(dfx)))==length(dfx)) {
-  rownames(dfx)<- EU_labels[[2]] 
-    } #Substitute name with short labels of the appropriate country
-  dfx<-as.data.frame(t(dfx))     #convert factor columns into numeric to apply prcomp
+  rownames(dfx)<- EU_labels[[2]]
+    }                                      #substitute name with short labels
+  dfx<-as.data.frame(t(dfx))               #convert factor columns into numeric
   indx <- sapply(dfx, is.factor)
   dfx[indx] <- lapply(dfx[indx], function(x) as.numeric(as.character(x)))
-  
-  
+
+
   #Principal Component Analysis
   pr.out<-prcomp(dfx, scale=TRUE)
-  #print(pr.out$rotation[,1:2])           # print first two PC loadings and plot first two PC
   graph<-autoplot(pr.out,variance_percentage=FALSE,loadings=TRUE,
-           loadings.label=TRUE,loadings.label.repel=TRUE,loadings.colour="coral",loadings.label.size=3,loadings.label.colour="grey35", scale=0,colour="gold2")+ggtitle(paste("The first two PCs for",toString(index[i,2]),"pollutant"))+mytheme 
+           loadings.label=TRUE,loadings.label.repel=TRUE,loadings.colour="coral",
+           loadings.label.size=3,loadings.label.colour="grey35",scale=0,colour="gold2")+
+           ggtitle(paste("The first two PCs for",toString(index[i,2]),"pollutant"))+
+           mytheme
+  pve= 100* (pr.out$sdev ^2)/ sum(pr.out$sdev ^2)             #screeplot
+  pvedf<-as.data.frame(pve)
+  pvedf["PC"]<-c(1:28)
+  scree<-ggplot(pvedf, aes(x=factor(PC),y=pve, group=1))+
+    geom_point(size =2.25,color="blue")+geom_line(size = 1,color="blue")+
+    labs(title="Screeplot", x="Number of principal components",
+    y="Proportion of variance explained")
 
-  pve= 100* (pr.out$sdev ^2)/ sum(pr.out$sdev ^2)  #screeplot
-  scree<- ggplot(data.frame(pve),aes("Principal Component", "Percentage of variance explained"))
-  print(scree)
-    #plot(pve , type ="o", ylab="PVE ", xlab=" Principal Component ",
-       #col =" blue",axes = F)
-  #axis(side = 1, at = seq(from=0,to=30))
-  #axis(side = 2, at = seq(from=0,to=100,by=5))
-  #title(paste("Scree plot for PCs of",toString(index[i,2]),"pollutant"))
-  #grid()
-  
   #compute vector of BIC for first 27 principal components
-  BIC<-c(1:27)   #initialize a numeric vector to be filled with BIC(k) values. set max k=p-1
+  BIC<-c(1:27)   
   for (j in 1:27) {
-    f<-t(pr.out$rotation[,1:j])%*%pr.out$x[,1:j] #compute aF in X=aF+e
-    res_mat<-dfx[,1:j]-f                  #compute matrix of residuals
-    res_mat_sq<-res_mat*res_mat                  #square residuals
+    f<-pr.out$x[,1:j]%*%t(pr.out$rotation[,1:j]) #compute aF in X=aF+e
+    res_mat<-scale(dfx)-f                        #compute matrix of residuals
+    res_mat_sq<-res_mat*res_mat                 
     if (j==1){
-      res<-(sum(res_mat_sq)/(dim(dfx)[1]*dim(dfx)[2]))  #did separate for k=1 because of "rowSums"  
+      res<-(sum(res_mat_sq)/(dim(dfx)[1]*dim(dfx)[2]))   
     } else{
-    res<-(sum(rowSums(res_mat_sq))/(dim(dfx)[1]*dim(dfx)[2]))         #residuals sum of squares
+    res<-(sum(rowSums(res_mat_sq))/(dim(dfx)[1]*dim(dfx)[2]))   #residuals sum of squares
     }
     k<-j
-    BICk<-log(res)+k*(log(28^2))/(28^2) #BIC for each k
+    BICk<-log(res)+k*(log(28^2))/(28^2)
     BIC[j]<-BICk                                 #fill BIC vector at each iteration
     }
   min<-min(BIC)
-  num_pc<-match(min,BIC)                         #find and print k, the index of the min of BIC
-  cat("According to the BIC criterion, the optimal number of principal components is ", num_pc)
-  
-  
+  num_pc<-match(min,BIC)                         #number of PC selected by BIC
+
+
   #save first two PC in separate dataset for point d)
   PC1[i]<-pr.out$x[,1]
   colnames(PC1)[i]<-as.character(index[i,2])
   PC2[i]<-pr.out$x[,2]
   colnames(PC2)[i]<-as.character(index[i,2])
-  
-  #save relevant objects with their respective name
-  assign(paste0("BIC_", index[i,2]), BIC)
-  assign(paste0("df_", index[i,2]), dfx)
-  assign(paste0("prcomp_",index[i,2]),pr.out)
-  assign(paste0("Screeplot_",index[i,2]),scree)
-  assign(paste0("PC1-PC2_",index[i,2]),graph)
+
+  #save relevant objects with their respective name for each pollutant
+  assign(paste0("BIC_", index[i,2]), BIC)       #vector of BIC
+  assign(paste0("df_", index[i,2]), dfx)        #dataset
+  assign(paste0("prcomp_",index[i,2]),pr.out)   #output of prcomp
+  assign(paste0("Screeplot_",index[i,2]),scree) #scree plot
+  assign(paste0("PC1-PC2_",index[i,2]),graph)   #plot of first two PCs
+  assign(paste0("num_pc_", index[i,2]), num_pc) #number of PC selected by BIC
+
   #remove non relevant objects
   rm(dfx)
   rm(BIC)
   rm(pr.out)
+  rm(num_pc)
+  rm(scree)
 }
 ```
 Now to comment on the results we can called the corresponding stored object.
 
 ```{r}
-print("PC1-PC2_sulphur")
+ print("PC1-PC2_sulphur")
 ```
 
 
+```{r}
+print(`PC1-PC2_ammonia`)
+```
 
-## d) 
+## d)
 We plot the first 2 principal components for all the five pollutants over the time interval.
 
 Code to produce the plots:
@@ -156,14 +164,14 @@ PC1["years"]<-c(1990:2017)
 PC1<-gather(PC1, `ammonia`, `largepart`, `nmvoc`,`smallpart`, `sulphur`, key = "pollutant", value = "value") #transform data to be plotted
 PC1_plot<-ggplot(PC1,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
   geom_point(size = 2.25) +  geom_line(size = 1) +theme2 +mytheme+
-  labs(title = "Time trend PC1",x="Years",y="Value")
+  labs(title = "PC1",x="Years",y="Value")
 
 PC2["years"]<-c(1990:2017)
-PC2<-gather(PC2, `ammonia`, `largepart`, `nmvoc`,      #transform data to be plotted
+PC2<-gather(PC2, `ammonia`, `largepart`, `nmvoc`,     
             `smallpart`, `sulphur`, key = "pollutant", value = "value")
 PC2_plot<-ggplot(PC2,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
   geom_point(size = 2.25) +  geom_line(size = 1) +theme2 +mytheme+
-  labs(title = "Time trend PC2",x="Years",y="Value")
+  labs(title = "PC2",x="Years",y="Value")
 ```
 
 Here is the plot of the first principal component over time for the five pollutant in the dataset:
@@ -185,7 +193,7 @@ A factor model is defined as:
 
 with i=1,...,n ; j=1,...,p and r number of factors $f_i=\begin{bmatrix} f_{i1}\\ f_{i2} \\ \vdots \\ f_{ir} \end{bmatrix}$ and $\alpha_j=\begin{bmatrix} \alpha_{j1} & .. & \alpha_{jr} \end{bmatrix}$
 
-In matrix form we can write: 
+In matrix form we can write:
 \[\underset{n\times p}{X}=\underset{n\times r}{F}\underset{r\times p}{B^T}+\underset{n\times p}{\epsilon}\]
 
 In general the expression above is not identified since we don't observe neither $B$ nor $F$. If we consider a particular rotation matrix $H$, with $H^TH=I_r$ then we can rewrite the equation above as:
@@ -197,15 +205,15 @@ In the particular case of PCA, the NIPALS algorithm can find a unique solution b
 
 (ii) $a^T_ia_i=1$
 
-Of course the PCA solution is just one of the possibles, any restrictions that identify the model can lead to a unique solution(for example restrictions on the factors instead). 
+Of course the PCA solution is just one of the possibles, any restrictions that identify the model can lead to a unique solution(for example restrictions on the factors instead).
 
 In a factor model we believe that observed variables (Xs) are linear combinations of a limited number of underlying and unique factors (Zs); whereas in PCA component scores (Zs) are a linear combination of the observed variables (Xs) weighted by eigenvectors.
 The relationship between the two can be summarized by:
 \[ XH=UDH^TH=UD=Z \]
 with $U^TH=I_p$ , $H^TH=HH^T=I_p$ , $D=diag(d)$ of size $p\times p$.
-This shows that there is a transformation matrix (inverse of H, which in the case of orthogonal H is equal to $H^T$) for which the explanatory variables are linear combinations of the unobserved unique factors Z. 
+This shows that there is a transformation matrix (inverse of H, which in the case of orthogonal H is equal to $H^T$) for which the explanatory variables are linear combinations of the unobserved unique factors Z.
 
-### Concistency of NIPALS Algorithm and factor analysis
+### Consistency of NIPALS Algorithm and factor analysis
 
 In class we have seen how the NIPALS algorithm can be used to consistently estimate the scores in a principal components analysis (PCA) when the traditional optimization approach fails or is inefficient given the large number of parameters (p). In particular, we limited ourselves to the case in which $n>p$ and the matrix D of eigenvalues has rank p.  
 The starting point is \[X=F^*B^*+\epsilon\]
@@ -213,7 +221,7 @@ Under the assumptions:
 
 1. $\epsilon_{ij}$ are iid over i and j (can be relaxed to weakly dependent)
 
-2. \[E||f_i||^4 < M \] 
+2. \[E||f_i||^4 < M \]
 \[ \frac{1}{n}\sum_{i=1}^{\infty} f_if_i^T \overset{p}{\longrightarrow}\Sigma_F \] which is a positive definite matrix of constants. This assumption is related to saying that the matrix D of eigenvalues has rank p, since positive definiteness for a symmetric matrix can be defined as having a diagonal of non-zero elements
 
 3. $f_{ij}$, $\epsilon_{ij}$ are independent for all j (Exogeneity Assumption)
@@ -222,7 +230,7 @@ Under the assumptions:
 
 Given these assumptions we can consistently estimate $F^*=FH$ by $\hat{F}$ meaning that we have:
 
-1. $\hat{f_i}\overset{p}{\longrightarrow} Hf_i$ pointwise consistency 
+1. $\hat{f_i}\overset{p}{\longrightarrow} Hf_i$ pointwise consistency
 
 2. $min(\sqrt{n},\sqrt{p})[\hat{f_i}-Hf_i] \overset{d}{\longrightarrow} N(0,HV(f_i)H^T)$
   for $min(\sqrt{n},\sqrt{p})\to \infty$
@@ -232,25 +240,42 @@ If the assumptions 1-4 are met, also NIPALS method with the PCA restrictions can
 
 ## Question 3
 
-a) $p_1(x)=\frac{Pr(Y=1)Pr(X=x|Y=1)}{\sum_{l=1}^K{Pr(Y=l)Pr(X=x|Y=1)}}$
+a)  $p_1(x)=\frac{Pr(Y=1)Pr(X=x|Y=1)}{\sum_{l=1}^K{Pr(Y=l)Pr(X=x|Y=1)}}$
 
 In this case we have that:
-- $\pi_k=Pr(Y=k)$ is prior probability for class k
-- $X|Y=k \sim f_k(x)=N(\mu_k,\sigma^2)$ is the distribution of X for each class k
+
+* $\pi_k=Pr(Y=k)$ is prior probability for class k
+* $X|Y=k \sim f_k(x)=N(\mu_k,\sigma^2)$ is the distribution of X for each class k
 
 Using the Bayes rule to rewrite:
+$$p_{1}(x)=\frac{\pi_1f_1(x)}{\pi_1f_1(x)+\pi_2f_2(x)}$$
+In order to ease calculations in the next step, it is convenient to keep implicit the likelihood functions for the moment.
 
+b)  Plugging in the posterior probability of class 1 obtained in the previous point, we obtain:
+$$\log\left(\frac{p_1(x)}{1-p_1(x)}\right)=\log\left(\frac{\frac{\pi_1f_1(x)}{\pi_1f_1(x)+\pi_2f_2(x)}}{1-\frac{\pi_1f_1(x)}{\pi_1f_1(x)+\pi_2f_2(x)}}\right)=\log\left(\frac{\pi_1f_1(x)}{\pi_2f_2(x)}\right)$$
+We can now explicit the likelihood functions and simplify conveniently
+$$\log\left(\frac{p_1(x)}{1-p_1(x)}\right)=\log\left(\frac{\pi_1}{\pi_2}\right)+\log\left(\frac{f_1(X)}{f_2(x)}\right)=\log\left(\frac{\pi_1}{\pi_2}\right)+\log\left(\exp\left((x-\mu_1)^2-(x-\mu_2)^2\right)\right)$$
+$$=\log\left(\frac{\pi_1}{\pi_2}\right)-\frac{1}{2\sigma^2}(-2x\mu_1+\mu_{2}^2 +2x\mu_2-\mu_{2}^2)=\left[\log\left(\frac{\pi_1}{\pi_2}\right) + \frac{\mu_{2}^2-\mu_{1}^2}{2\sigma^2}\right]+x\left[\frac{\mu_1+\mu_2}{\sigma^2}\right]=$$
+Therefore,
 
+* $c_0=\log\left(\frac{\pi_1}{\pi_2}\right) + \frac{\mu_{2}^2-\mu_{1}^2}{2\sigma^2}$
+* $c_1=\frac{\mu_1+\mu_2}{\sigma^2}$      
 
+c) This derivation helps us appreciating how these two classfication methods are closely related. In particular, the log-odds ratio is linear in $x$ in both cases. In the logit model, the parameters estimated by maximum-likelihood are exactly the intercept and the coefficient on the $x$, while in LDA $c_0$ and $c_1$ are functions on the prior probabilities and of the paramters of the likelihood functions $\mu_1,\mu_2,\sigma^2$. We could conclude that the parameters estimated by the logit model are somehow *reduced forms* of those of LDA.
 
+d) Knowing that the Bayes classifier assigns an observation $X = x$ to the class k for which the posterior probability $P(Y = k|X = x)$ is the largest, we start by calculating the posterior probability of beloning to a generic class:
 
+$$p_k(k)=\frac{Pr(Y=k)Pr(X=x|Y=k)}{\sum_{l=1}^K{Pr(Y=l)Pr(X=x|Y=1)}}=\frac{\pi_kf_k(x)}{\sum_{l=1}^K \pi_lf_l(x)}$$
 
+Therefore, the Bayes classifier assign $X=x$ to class 1 if $p_1(x)>p_2(x)$, that is equivalent to $\frac{p_1(x)}{p_2(x)}>1$. Therefore, we can restate this rule as
+$$\frac{p_1(x)}{p_2(x)}=\frac{\frac{\pi_1f_1(x)}{\sum_{l=1}^K \pi_lf_l(x)}}{\frac{\pi_2f_2(x)}{\sum_{l=1}^K \pi_lf_l(x)}}=\frac{\pi_1f_1(x)}{\pi_2f_2(x)}>1$$
 
+By making the density function explicit and taking the logarithm of both numerator and denominator, the first constant term of the density function simplifies and we are left with
+$$\frac{-\frac{1}{2}\left(x^T\Sigma^{-1}x-2x^{T}\Sigma^{-1}\mu_1+\mu_1^{T}\Sigma^{-1}\mu_1\right)+\log(\pi_1)}{-\frac{1}{2}\left(x^T\Sigma^{-1}x-2x^{T}\Sigma^{-1}\mu_2+\mu_2^{T}\Sigma^{-1}\mu_2\right)+\log(\pi_2)}>1$$
 
+Which corresponds to
+$$-\frac{1}{2}(x^T\Sigma^{-1}x)+x^{T}\Sigma^{-1}\mu_1-\frac{1}{2}(\mu_1^{T}\Sigma^{-1}\mu_1)+\log(\pi_1)>-\frac{1}{2}(x^T\Sigma^{-1}x)+x^{T}\Sigma^{-1}\mu_2-\frac{1}{2}(\mu_2^{T}\Sigma^{-1}\mu_2)+\log(\pi_2)$$
+$$\iff$$
+$$x^{T}\Sigma^{-1}\mu_1-\frac{1}{2}(\mu_1^{T}\Sigma^{-1}\mu_1)+\log(\pi_1)>x^{T}\Sigma^{-1}\mu_2-\frac{1}{2}(\mu_2^{T}\Sigma^{-1}\mu_2)+\log(\pi_2)$$
 
-
-
-
-
-
-
+Which corresponds exactly to $\delta_1(x)>\delta_2(x).$
