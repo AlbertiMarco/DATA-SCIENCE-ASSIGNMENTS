@@ -29,8 +29,11 @@ Upload dataset:
 #setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments")
 setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
 data<-read_excel("env_air_emis.xls")
-x <- getURL("https://raw.githubusercontent.com/AlbertiMarco/DATA-SCIENCE-ASSIGNMENTS/master/EU%20labels.csv")
-EU_labels<- read.csv(text = x, header = FALSE ,sep=";") #import country tags to make plots more readable
+urlRemote<-"https://raw.githubusercontent.com/"
+pathGithub<-"AlbertiMarco/DATA-SCIENCE-ASSIGNMENTS/master/EU%20labels.csv"
+x <- paste0(urlRemote, pathGithub)
+#import country tags to make plots more readable
+EU_labels<- read.csv(text = x, header = FALSE ,sep=";") 
 rownames(EU_labels)<-EU_labels[[1]]
 
 ```
@@ -56,9 +59,10 @@ PC2<-data.frame(matrix(ncol=5,nrow=28))
 ```
 
 Then we run the loop that:
+
 1) Selects the chunk of the dataframe corresponding to one pollutant and puts it into shape
 2) Runs PCA on the reduced dataframe and produces the plots of the first two PCs
-3) Produces a scree plot  
+3) Produces a scree plot
 4) Computes the Bayesian Informatio Criteria and prints the optimal number of PCs according to this method 
 5) Stores plots and loadings for future use
 
@@ -86,15 +90,17 @@ for (i in 1:5){
   #Principal Component Analysis
   pr.out<-prcomp(dfx, scale=TRUE)
   graph<-autoplot(pr.out,variance_percentage=FALSE,loadings=TRUE,
-           loadings.label=TRUE,loadings.label.repel=TRUE,loadings.colour="coral",loadings.label.size=3,loadings.label.colour="grey35", scale=0,colour="gold2")+ggtitle(paste("The first two PCs for",toString(index[i,2]),"pollutant"))+mytheme 
+           loadings.label=TRUE,loadings.label.repel=TRUE,loadings.colour="coral",
+           loadings.label.size=3,loadings.label.colour="grey35",scale=0,colour="gold2")+
+           ggtitle(paste("The first two PCs for",toString(index[i,2]),"pollutant"))+
+           mytheme 
   pve= 100* (pr.out$sdev ^2)/ sum(pr.out$sdev ^2)             #screeplot
-  #scree<- ggplot(data.frame(pve),aes("Principal Component", "Percentage of variance explained"))
-  scree<-plot(pve , type ="o", ylab="PVE ", xlab=" Principal Component ",
-       col =" blue",axes = F)
-  axis(side = 1, at = seq(from=0,to=30))
-  axis(side = 2, at = seq(from=0,to=100,by=5))
-  title(paste("Scree plot for PCs of",toString(index[i,2]),"pollutant"))
-  grid()
+  pvedf<-as.data.frame(pve)
+  pvedf["PC"]<-c(1:28)
+  scree<-ggplot(pvedf, aes(x=factor(PC),y=pve, group=1))+
+    geom_point(size =2.25,color="blue")+geom_line(size = 1,color="blue")+
+    labs(title="Screeplot", x="Number of principal components", 
+    y="Proportion of variance explained")
   
   #compute vector of BIC for first 27 principal components
   BIC<-c(1:27)   
@@ -158,7 +164,7 @@ PC1_plot<-ggplot(PC1,aes(x=factor(years),y=value, group=pollutant,color=pollutan
   labs(title = "PC1",x="Years",y="Value")
 
 PC2["years"]<-c(1990:2017)
-PC2<-gather(PC2, `ammonia`, `largepart`, `nmvoc`,      #transform data to be plotted
+PC2<-gather(PC2, `ammonia`, `largepart`, `nmvoc`,     
             `smallpart`, `sulphur`, key = "pollutant", value = "value")
 PC2_plot<-ggplot(PC2,aes(x=factor(years),y=value, group=pollutant,color=pollutant))+
   geom_point(size = 2.25) +  geom_line(size = 1) +theme2 +mytheme+
