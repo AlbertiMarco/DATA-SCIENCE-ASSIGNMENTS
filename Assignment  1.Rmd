@@ -1,8 +1,8 @@
 ---
 title: "Data Science Methods - Assignment 1"
 author:
-- "M. Alberti, 2020162"
-- "N. Ceschin, 344510"
+- "M. Alberti, s.n. 2020162"
+- "N. Ceschin, s.n. 344510"
 
 date: February 21, 2020
 output: pdf_document
@@ -26,8 +26,8 @@ library(ggrepel)
 Upload dataset:
 
 ```{r results='hide', message=FALSE, warning=FALSE}
-#setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments")
-setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
+setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments")
+#setwd("~/Tilburg/Courses/Data Science Methods/Assignment1/DATA-SCIENCE-ASSIGNMENTS")
 data<-read_excel("env_air_emis.xls")
 urlRemote<-"https://raw.githubusercontent.com/"
 pathGithub<-"AlbertiMarco/DATA-SCIENCE-ASSIGNMENTS/master/EU%20labels.csv"
@@ -169,8 +169,7 @@ The second vector of loadings displays a completely different situation. The ran
 
 The problem which arises when we interpret principal components' scores and loadings is that they are usually identified only up to a rotation. In view of a more general "factor model" as $X=F\Lambda^{'}+e$, under a set of assumption laid down in Bai & Ng (2002) (which we present in Question 2) principal components analysis estimates doesn't esimate $F$ and $\Lambda$, but $FH$ ( a rotation of $F$) and $\Lambda H^{'-1}$ (a rotation of $\Lambda$). This means that it is not possible to interpret straightforwardly signs and magnitudes of the estimated factor and factors loadings. Bai and Ng (2012), with a later paper, provides a set of assumptions under which this is possible. Indeed, were these assumptions to hold for $F$ anf $\Lambda$, then the corrisponding rotation matrix would be asymptotically an identity matrix. Hence, we would achieve exact identification. However, due to the very tiny dimension of the datset under analysis, we reasonably exclude asymptotic results to hold in this PC analysis.
 
-[not sure about this, we are not running a model, just using it as dimension reduction technique]**As a final point, we remind that what we try to achieve when running a PCA is indeed to estimate factors and factors' loadings of a factor model. This model assumes that our data can be summarized by a linear combination of few variables (factors) plus an error term that is uncorrelated with these variables.** 
-PCA aims at providing a solution to factors models. For this specific case we are trying to find a linear combination of countries that are able to explain most of the variation in the air pollutant over years. 
+In this case PCA aims to find the linear combination of variables able to explain a large part of the variance in the data. Meaning that here it is used as a dimension's reduction technique. For this specific case we are trying to find a linear combination of countries that are able to explain most of the variation in the air pollutant over years. 
 
 \pagebreak
 
@@ -219,7 +218,7 @@ PC2_plot<-ggplot(PC2,aes(x=factor(years),y=value, group=pollutant,color=pollutan
 print(PC1_plot)
 ```
 
-By plotting the values of the first principal component for all the pollutants, we can immediately appreciate how the trends of all of them are extremly similar, increasing monotonically and linearly. The fact that they are alike even in levels arises probably from having rescaled all the five datasets before running the PCA. 
+By plotting the values of the first principal component for all the pollutants, we can immediately appreciate how the trends of all of them are extremly similar, increasing monotonically and linearly. The fact that they are alike even in levels arises probably from having rescaled all the five datasets before running the PCA.  
 
 \pagebreak
 
