@@ -154,7 +154,7 @@ Now to answer a)-d) questions we just call the relevant  stored object.
 print(`PC1-PC2_sulphur`)
 
 ```
-Were we to disregard the statistical pitfalls of this exercise, we can interpret the results from this plot as follows. To ease our analysis, we will present as well some basic descriptive statistics of the first two principal components' loadings.
+Were we to disregard the statistical pitfalls of this exercise, we can interpret the results from this plot as follows. To ease our analysis, we will present as well some basic descriptive statistics about the distribution of the first two principal components' loadings.
 ```{r}
 summary(prcomp_sulphur$rotation[,1])
 ```
@@ -162,9 +162,9 @@ At a first glance, we notice that the loadings on the first principal component 
 ```{r}
 summary(prcomp_sulphur$rotation[,2])
 ```
-The second vector of loadings displays a completely different situation. The range of variability is definitely larger (from -0.46 to 0.23), with a vector of loadings with both positive and negative values. ALso, these coefficients are more uniformely distributed along this range. In line with the previous interpretation perspective, we can conlude that the second principal component "corresponds" to the set of countries whose loadings are the highest. At a first glance, the countries which display higher values are all from northern Europe, while those displaying lower values are all from southern Europe. Needless to say, this is just a rough visual analysis and futher investigation would be necessary in order to understan which is the real driver of these values.
+The second vector of loadings displays a completely different situation. The range of variability is definitely larger (from -0.46 to 0.23), with a vector of loadings with both positive and negative values. Also, these coefficients are more uniformely distributed along this range. In line with the previous interpretation perspective, we can conlude that the second principal component "corresponds" to the set of countries whose loadings are the highest. At a first glance, the countries which display higher values are all from Northern Europe, while those displaying lower values are all from Southern Europe. Needless to say, this is just a rough visual analysis and futher investigation would be necessary in order to understand which is the real driver of these values.
 
-The problem which arises when we interpret principal components' scores and loadings is that they are usually identified only up to a rotation. In view of a more general "factor model" as $X=F\Lambda^{'}+e$, principal components analysis estimates doesn't esimate $F$ and $\Lambda$, but $FH$ ( a rotation of $F$) and $\Lambda H^{'-1}$ (a rotation of $\Lambda$). This means that it is not possible to interpret straightforwardly signs and magnitudes of the estimated factor and factors loadings. Bai and Ng (2012) provides a set of assumptions under which this is possible. Indeed, were these assumptions to hold for $F$ anf $\Lambda$, the corrisponding rotation matrix would be asymptotically an identity matrix. Hence, we would achieve exact identification. However, due to the very tiny dimension of the datset under analysis, we can conclude immediately that those assumptions don't hold here.
+The problem which arises when we interpret principal components' scores and loadings is that they are usually identified only up to a rotation. In view of a more general "factor model" as $X=F\Lambda^{'}+e$, principal components analysis estimates doesn't esimate $F$ and $\Lambda$, but $FH$ ( a rotation of $F$) and $\Lambda H^{'-1}$ (a rotation of $\Lambda$). This means that it is not possible to interpret straightforwardly signs and magnitudes of the estimated factor and factors loadings. Bai and Ng (2012) provides a set of assumptions under which this is possible. Indeed, were these assumptions to hold for $F$ anf $\Lambda$, then the corrisponding rotation matrix would be asymptotically an identity matrix. Hence, we would achieve exact identification. However, due to the very tiny dimension of the datset under analysis, we can conclude immediately that the set of those assumptions don't hold here.
 
 As a final point, we remind that what we try to achieve when running a PCA is indeed to estimate factors and factors' loadings of a factor model. This model assumes that our data can be summarized by a linear combination of few variables (factors) plus an error term that is uncorrelated with these variables. PCA aims at providing a solution to factors models.
 
@@ -184,12 +184,6 @@ cat("According to the BIC criterion, the optimal number of principal components 
 ```
 The conclusion we draw by using the BIC criterion is completely at odds with that we drawn from the analysis of the screeplot. The BIC picks the maximum number of principal components available (given the restriction $k<p$), while in the previous point we appreciated that all the princiapl components from 2 to 27 explain a trivial part of the total variance. By looking more closely at how the BIC is computed in this case, we notice that this result is due to the fact that while the "fit" part decreases rapidly and monotonically as the number of principal components increases, the "penalty" part is rather stable. Hence, the model with the maximum number of principal components presents the lowest BIC. This fact is common to all the pollutants. A first hypothesis to try to rationalize this result is that we know that the BIC criterion is an asymptotic technique. Namely, we know that the probablilty that the number of principal components selected by the BIC is the true nuumber of principal components of the model approaches 1 only for very large numbers of observations and variables. The datasets provided clearly don't meet this condition. We can then conclude that one of the reasons why the BIC criterion yields such a strange result in this case is that a fundamental assumption is violated.
 
-```{r}
-
-
-```{r}
-print(`PC1-PC2_ammonia`)
-```
 
 
 ## d)
@@ -221,7 +215,7 @@ PC2_plot<-ggplot(PC2,aes(x=factor(years),y=value, group=pollutant,color=pollutan
 print(PC1_plot)
 ```
 
-By plotting the values of the first principal component for all the pollutants, we can immediately appreciate how the trends of all of them are extremly similar, increasing monotoniclaly and linearly. The fact that they are alike even in levels is porbably due to the fact that all the five datasets have been rescaled before running the PCA.
+By plotting the values of the first principal component for all the pollutants, we can immediately appreciate how the trends of all of them are extremly similar, increasing monotonically and linearly. The fact that they are alike even in levels arises probably from having rescaled all the five datasets before running the PCA.
 
 \pagebreak
 
