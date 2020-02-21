@@ -250,7 +250,8 @@ In a factor model we believe that observed variables (Xs) are linear combination
 The relationship between the two can be summarized by:
 \[ XH=UDH^TH=UD=Z \]
 with $U^TH=I_p$ , $H^TH=HH^T=I_p$ , $D=diag(d)$ of size $p\times p$.
-This shows that there is a transformation matrix (inverse of H, which in the case of orthogonal H is equal to $H^T$) for which the explanatory variables are linear combinations of the unobserved unique factors Z.
+This shows that there is a transformation matrix (inverse of H, which in the case of orthogonal H is equal to $H^T$) for which the explanatory variables are linear combinations of the unobserved unique factors Z, namely $X=ZH^T$. This is exactly what NIPALS exploits in order to estimate consistently the PC solution. Indeed, in NIPALS we are repeatedly regressing our matix of data on estimates of loadings and principal components which get recursively updated. Thus, NIPALS is assuming exactly that we can express our data as linear combinations of the principal components.
+To appreciate how this algorithm exploits this relationship, it is worth to summarize its main steps. NIPALS starts assuming a guess for the first principal component, $Z_1^I$. Then, it runs a linear regression of each column (variable) of our dataset on this initial prinicipal component. It is possible to obtain unbiased estimates of the coefficients on $Z_1^I$ since we assume the error term in this regression to be independent of the regressor (exogeneity holds), as principal components are supposed to be independent among them. After having standardized these first coefficients, we exploit again the relationship we mentioned above by running a regression of each row of the datset on the vector of coefficients we estimated before. Again, the loadings in PCA are supposed to be independent among them, hence we assume exogenity holds in this regression. We obtain then new estimates of the principal component $Z_1^I$, $Z_1^{II}$, that we use as new initial value for the algorithm. NIPALS stops when the distance between $Z_1^I$ and $Z_1^{II}$ within an iteration is sufficienlty small. Also, it can be set to compute as many principal components as desirable.
 
 ### Consistency of NIPALS Algorithm and factor analysis
 
@@ -313,8 +314,7 @@ $$\pi_1f_1(x)>\pi_2f_2(x)$$
 By making the density function explicit, the constant terms simplifies. By taking logs on both sides, we are left with
 
 $$-\frac{1}{2}\left(x^T\Sigma^{-1}x-2x^{T}\Sigma^{-1}\mu_1+\mu_1^{T}\Sigma^{-1}\mu_1\right)+\log(\pi_1)>-\frac{1}{2}\left(x^T\Sigma^{-1}x-2x^{T}\Sigma^{-1}\mu_2+\mu_2^{T}\Sigma^{-1}\mu_2\right)+\log(\pi_2)$$
-
-Which corresponds to
+$$\iff$$
 $$-\frac{1}{2}(x^T\Sigma^{-1}x)+x^{T}\Sigma^{-1}\mu_1-\frac{1}{2}(\mu_1^{T}\Sigma^{-1}\mu_1)+\log(\pi_1)>-\frac{1}{2}(x^T\Sigma^{-1}x)+x^{T}\Sigma^{-1}\mu_2-\frac{1}{2}(\mu_2^{T}\Sigma^{-1}\mu_2)+\log(\pi_2)$$
 $$\iff$$
 $$x^{T}\Sigma^{-1}\mu_1-\frac{1}{2}(\mu_1^{T}\Sigma^{-1}\mu_1)+\log(\pi_1)>x^{T}\Sigma^{-1}\mu_2-\frac{1}{2}(\mu_2^{T}\Sigma^{-1}\mu_2)+\log(\pi_2)$$
