@@ -154,7 +154,7 @@ Now to answer a)-d) questions we just call the relevant  stored object.
 print(`PC1-PC2_sulphur`)
 
 ```
-Were we to disregard the statistical pitfalls of this exercise, we can interpret the results from this plot as follows. To ease our analysis, we will present as well some basic descriptive statistics about the distribution of the first two principal components' loadings.
+Were we to disregard the statistical pitfalls of this exercise, we would interpret the results from this plot as follows. To ease our analysis, we will present as well some basic descriptive statistics about the distribution of the first two principal components' loadings.
 ```{r}
 summary(prcomp_sulphur$rotation[,1])
 ```
@@ -293,7 +293,7 @@ In order to ease calculations in the next step, it is convenient to keep implici
 b)  Plugging in the posterior probability of class 1 obtained in the previous point, we obtain:
 $$\log\left(\frac{p_1(x)}{1-p_1(x)}\right)=\log\left(\frac{\frac{\pi_1f_1(x)}{\pi_1f_1(x)+\pi_2f_2(x)}}{1-\frac{\pi_1f_1(x)}{\pi_1f_1(x)+\pi_2f_2(x)}}\right)=\log\left(\frac{\pi_1f_1(x)}{\pi_2f_2(x)}\right)$$
 We can now explicit the likelihood functions and simplify conveniently
-$$\log\left(\frac{p_1(x)}{1-p_1(x)}\right)=\log\left(\frac{\pi_1}{\pi_2}\right)+\log\left(\frac{f_1(X)}{f_2(x)}\right)=\log\left(\frac{\pi_1}{\pi_2}\right)+\log\left(\exp\left((x-\mu_1)^2-(x-\mu_2)^2\right)\right)$$
+$$\log\left(\frac{p_1(x)}{1-p_1(x)}\right)=\log\left(\frac{\pi_1}{\pi_2}\right)+\log\left(\frac{f_1(X)}{f_2(x)}\right)=\log\left(\frac{\pi_1}{\pi_2}\right)+\log\left(\exp\left[-\frac{1}{2\sigma^2}\left((x-\mu_1)^2-(x-\mu_2)^2\right)\right]\right)$$
 $$=\log\left(\frac{\pi_1}{\pi_2}\right)-\frac{1}{2\sigma^2}(-2x\mu_1+\mu_{2}^2 +2x\mu_2-\mu_{2}^2)=\left[\log\left(\frac{\pi_1}{\pi_2}\right) + \frac{\mu_{2}^2-\mu_{1}^2}{2\sigma^2}\right]+x\left[\frac{\mu_1+\mu_2}{\sigma^2}\right]=$$
 Therefore,
 
@@ -302,15 +302,17 @@ Therefore,
 
 c) This derivation helps us appreciating how these two classfication methods are closely related. In particular, the log-odds ratio is linear in $x$ in both cases. In the logit model, the parameters estimated by maximum-likelihood are exactly the intercept and the coefficient on the $x$, while in LDA $c_0$ and $c_1$ are functions on the prior probabilities and of the paramters of the likelihood functions $\mu_1,\mu_2,\sigma^2$. We could conclude that the parameters estimated by the logit model are somehow *reduced forms* of those of LDA.
 
-d) Knowing that the Bayes classifier assigns an observation $X = x$ to the class k for which the posterior probability $P(Y = k|X = x)$ is the largest, we start by calculating the posterior probability of beloning to a generic class:
+d) Knowing that the Bayes classifier assigns an observation $X = x$ to the class $k$ for which the posterior probability $P(Y = k|X = x)$ is the largest, we start by calculating the posterior probability of beloning to a generic class:
 
-$$p_k(k)=\frac{Pr(Y=k)Pr(X=x|Y=k)}{\sum_{l=1}^K{Pr(Y=l)Pr(X=x|Y=1)}}=\frac{\pi_kf_k(x)}{\sum_{l=1}^K \pi_lf_l(x)}$$
+$$p_k(x)=\frac{Pr(Y=k)Pr(X=x|Y=k)}{\sum_{l=1}^K{Pr(Y=l)Pr(X=x|Y=1)}}=\frac{\pi_kf_k(x)}{\sum_{l=1}^K \pi_lf_l(x)}$$
 
-Therefore, the Bayes classifier assign $X=x$ to class 1 if $p_1(x)>p_2(x)$, that is equivalent to $\frac{p_1(x)}{p_2(x)}>1$. Therefore, we can restate this rule as
-$$\frac{p_1(x)}{p_2(x)}=\frac{\frac{\pi_1f_1(x)}{\sum_{l=1}^K \pi_lf_l(x)}}{\frac{\pi_2f_2(x)}{\sum_{l=1}^K \pi_lf_l(x)}}=\frac{\pi_1f_1(x)}{\pi_2f_2(x)}>1$$
+Therefore, the Bayes classifier assign $X=x$ to class 1 if $p_1(x)>p_2(x)$. We can restate this rule as
+$$\frac{\pi_1f_1(x)}{\sum_{l=1}^K \pi_lf_l(x)}>\frac{\pi_2f_2(x)}{\sum_{l=1}^K \pi_lf_l(x)}$$
+$$\iff$$
+$$\pi_1f_1(x)>\pi_2f_2(x)$$
+By making the density function explicit, the constant terms simplifies. By taking logs on both sides, we are left with
 
-By making the density function explicit and taking the logarithm of both numerator and denominator, the first constant term of the density function simplifies and we are left with
-$$\frac{-\frac{1}{2}\left(x^T\Sigma^{-1}x-2x^{T}\Sigma^{-1}\mu_1+\mu_1^{T}\Sigma^{-1}\mu_1\right)+\log(\pi_1)}{-\frac{1}{2}\left(x^T\Sigma^{-1}x-2x^{T}\Sigma^{-1}\mu_2+\mu_2^{T}\Sigma^{-1}\mu_2\right)+\log(\pi_2)}>1$$
+$$-\frac{1}{2}\left(x^T\Sigma^{-1}x-2x^{T}\Sigma^{-1}\mu_1+\mu_1^{T}\Sigma^{-1}\mu_1\right)+\log(\pi_1)>-\frac{1}{2}\left(x^T\Sigma^{-1}x-2x^{T}\Sigma^{-1}\mu_2+\mu_2^{T}\Sigma^{-1}\mu_2\right)+\log(\pi_2)$$
 
 Which corresponds to
 $$-\frac{1}{2}(x^T\Sigma^{-1}x)+x^{T}\Sigma^{-1}\mu_1-\frac{1}{2}(\mu_1^{T}\Sigma^{-1}\mu_1)+\log(\pi_1)>-\frac{1}{2}(x^T\Sigma^{-1}x)+x^{T}\Sigma^{-1}\mu_2-\frac{1}{2}(\mu_2^{T}\Sigma^{-1}\mu_2)+\log(\pi_2)$$
