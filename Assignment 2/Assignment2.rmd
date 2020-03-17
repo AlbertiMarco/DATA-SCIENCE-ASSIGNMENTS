@@ -1,0 +1,93 @@
+---
+title: "Data Science Methods - Assignment 2"
+author:
+- "M. Alberti, s.n. 2020162"
+- "N. Ceschin, s.n. 344510"
+
+date: March 16, 2020
+output: pdf_document
+
+---
+
+## Question 1
+
+First we upload all relevant libraries:
+
+```{r results='hide', message=FALSE, warning=FALSE}
+rm(list=ls())
+
+# load libraries
+library(leaps)
+library(glmnet) # for lasso and ridge
+library(Matrix)
+library(pROC)
+```
+
+Data preparation
+
+```{r results='hide', message=FALSE, warning=FALSE}
+setwd("C:/Users/nicol/Documents/Tilburg/Courses/Data Science Methods/DATA-SCIENCE-ASSIGNMENTS/Assignment 2")
+data<- read.csv("R_class.csv", sep=",", dec=".", header=TRUE)
+
+ca <- grep("ca", names(data), value=T)  #vector of names of columns containing ca
+drops <- names(data) %in% c(ca)
+data <- data[!drops]  
+
+# drop vars not used
+assets <- grep("assets", names(data), value=T)
+stocks <- grep("stocks", names(data), value=T)
+narrowm <- grep("narrowm", names(data), value=T)
+money <- grep("money", names(data), value=T)
+ltrate <- grep("ltrate", names(data), value=T)
+stir <- grep("stir", names(data), value=T)
+loans <- grep("loans", names(data), value=T)
+debt <- grep("debt", names(data), value=T)
+er <- grep("er", names(data), value=T)
+cpi <- grep("cpi", names(data), value=T)
+gap <- grep("gap", names(data), value=T)
+glo <- grep("a_", names(data), value=T)
+gdp <- grep("gdp", names(data), value=T)
+i <- grep("i_", names(data), value=T)
+c <- grep("c_", names(data), value=T)
+ri <- grep("ri", names(data), value=T)
+rc <- grep("rc", names(data), value=T)
+
+drops <- names(data) %in% c("year", "ccode", stocks, money, stir,assets,i,ri,glo) 
+saves <- names(data) %in% c(glo)
+full <- data[!drops] # drops those variables which have true indication in "drops"
+full <- cbind(data[glo], full)
+
+# FULL SET: omit observations with missing values
+full_om <- na.omit(full)
+```
+
+Ridge regression
+
+```{r warning=FALSE}
+#drop alternative independent variables
+misc.list <- c("b1","b3","rec1","rec2","rec3")
+location <- names(full_om) %in% c(misc.list) 
+name.indep <- names(full_om[!location])
+indep <- full_om[name.indep]
+
+#division of the sample
+set.seed(4)
+indexes = sample(1:nrow(full_om), size=0.632*nrow(full), replace=F)
+test = full_om[-indexes,]
+train = full_om[indexes,]
+
+#Run ridge
+train.mat = model.matrix(b2~., data=train) 
+test.mat = model.matrix(b2~., data=test)
+grid = 10 ^ seq(2, -3, length=100)
+mod.ridge = cv.glmnet(train.mat, train[, "b2"], alpha=0, lambda=grid, family="binomial", thresh=1e-12) 
+lambda.best = mod.ridge$lambda.min 
+ridge.probs = predict(mod.ridge, newx=test.mat, s=lambda.best, type="response")
+true <- test[,"b2"]
+r<-roc(true, ridge.probs, ci=T) # ROC analysis
+###aucs[1,j] <- as.numeric(r$auc)		
+	#ci95_lo[1,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[1]
+	#ci95_up[1,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[3]
+
+
+```
