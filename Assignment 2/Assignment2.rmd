@@ -1,0 +1,65 @@
+---
+title: "Data Science Methods - Assignment 2"
+author:
+- "M. Alberti, s.n. 2020162"
+- "N. Ceschin, s.n. 344510"
+
+date: March 16, 2020
+output: pdf_document
+
+---
+
+## Question 1
+
+First we upload all relevant libraries:
+
+```{r results='hide', message=FALSE, warning=FALSE}
+rm(list=ls())
+
+# load libraries
+library(leaps)
+library(glmnet) # for lasso and ridge
+library(Matrix)
+```
+
+Data preparation
+
+```{r results='hide', message=FALSE, warning=FALSE}
+setwd("C:/Users/nicol/Documents/Tilburg/Courses/Data Science Methods/DATA-SCIENCE-ASSIGNMENTS/Assignment 2")
+data<- read.csv("R_class.csv", sep=",", dec=".", header=TRUE)
+
+ca <- grep("ca", names(data), value=T)  #vector of names of columns containing ca
+drops <- names(data) %in% c(ca)
+data <- data[!drops]  
+
+# drop vars not used
+assets <- grep("assets", names(data), value=T)
+stocks <- grep("stocks", names(data), value=T)
+narrowm <- grep("narrowm", names(data), value=T)
+money <- grep("money", names(data), value=T)
+ltrate <- grep("ltrate", names(data), value=T)
+stir <- grep("stir", names(data), value=T)
+loans <- grep("loans", names(data), value=T)
+debt <- grep("debt", names(data), value=T)
+er <- grep("er", names(data), value=T)
+cpi <- grep("cpi", names(data), value=T)
+gap <- grep("gap", names(data), value=T)
+glo <- grep("a_", names(data), value=T)
+gdp <- grep("gdp", names(data), value=T)
+i <- grep("i_", names(data), value=T)
+c <- grep("c_", names(data), value=T)
+ri <- grep("ri", names(data), value=T)
+rc <- grep("rc", names(data), value=T)
+
+drops <- names(data) %in% c("year", "ccode", stocks, money, stir,assets,i,ri,glo) 
+saves <- names(data) %in% c(glo)
+full <- data[!drops] # drops those variables which have true indication in "drops"
+full <- cbind(data[glo], full)
+
+# FULL SET: omit observations with missing values
+full_om <- na.omit(full)
+```
+
+
+
+
