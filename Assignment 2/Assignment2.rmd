@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 ---
 title: "Data Science Methods - Assignment 2"
 author:
@@ -27,7 +27,9 @@ library(pROC)
 Data preparation
 
 ```{r results='hide', message=FALSE, warning=FALSE}
-setwd("C:/Users/nicol/Documents/Tilburg/Courses/Data Science Methods/DATA-SCIENCE-ASSIGNMENTS/Assignment 2")
+#setwd("C:/Users/nicol/Documents/Tilburg/Courses/Data Science Methods/DATA-SCIENCE-ASSIGNMENTS/Assignment 2")
+setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments/Assignment 2")
+
 data<- read.csv("R_class.csv", sep=",", dec=".", header=TRUE)
 
 ca <- grep("ca", names(data), value=T)  #vector of names of columns containing ca
@@ -60,7 +62,117 @@ full <- cbind(data[glo], full)
 
 # FULL SET: omit observations with missing values
 full_om <- na.omit(full)
+
+
+#DATA for logit model
+## interaction-terms for logit model
+ia_pub<-data$pdebt_gap*data$ltrate
+data$ia_pub<-ia_pub
+
+ia_prb<-data$loans1_y_gap*data$ltrate
+data$ia_prb<-ia_prb
+
+ia_jb<-data$loans1_y_gap*data$ltrate*data$pdebt_gap
+data$ia_jb<-ia_jb
+
+ia_lygr<-data$loans1_y*data$gr_rgdp
+data$ia_lygr<-ia_lygr
+
+ia_pygr<-data$pdebt*data$gr_rgdp
+data$ia_pygr<-ia_pygr
+
+ia_lyer<-data$loans1_y_gap*data$er_gap
+data$ia_lyer<-ia_lyer
+
+## country factor
+data$country.factor<-as.factor(data$ccode)
+
+#throw out vars not used
+drops.logit <- names(data) %in% c("year") # true-false indicator: true at the names in vector
+full.logit <- data[!drops] # drops those variables which have true indication in "drops"
+
 ```
+
+Preparation before running the estimation: 
+
+```{r}
+# variables
+var.list <- c( "loans1_y_gap", "pdebt_gap", "narrowm_y_gap",  "rltrate", "gr_rgdp", "gr_cpi",  "er_gap", "loans1_y", "pdebt", "ltrate")
+# model list
+model.list <- c("Ridge regression", "Lasso Regression")
+
+# variables (logit)
+var.logit <- c("loans1_y_gap", "pdebt_gap", "narrowm_y_gap",  "rltrate", "gr_rgdp", "gr_cpi",  "er_gap")
+# interaction terms (logit)
+ia.logit <- c("ia_pub", "ia_prb", "ia_jb", "ia_lygr", "ia_pygr", "ia_lyer")
+
+
+# parameter list
+param.list <- c("B", "$ J_{try} $", "$ J $", "\\# of crises")
+out.list <- c("\\textbf{Model}", "AUC", "95\\%-CI", "N", "", "AUC", "95\\%-CI", "N")
+
+# miscellaneous non-independent
+misc.list <- c("b2","b1","b3","rec1","rec2","rec3")
+
+# table matrices
+out <- matrix(nrow=3, ncol=9)
+spec <- matrix(nrow=4, ncol=7)
+sig_base <- matrix(nrow=3,ncol=2)
+sig_pre <- matrix(nrow=2,ncol=2)
+sig_many <- matrix(nrow=3,ncol=1)
+
+# Bootstrap runs
+runs <- 100
+
+# confidence intervals
+n.ci <- 3
+ci <- c(0.99, 0.95, 0.9)
+
+```
+
+Setting up the logit framework:
+
+```{r}
+#LOGIT
+
+aucs <- matrix(nrow=1, ncol=runs)
+ci95_lo <- matrix(nrow=1, ncol=runs)
+ci95_up <- matrix(nrow=1, ncol=runs)
+
+N <- matrix(nrow=1, ncol=runs)
+	
+
+# get formula
+location <- names(full.logit) %in% c(var.logit, ia.logit,"country.factor") # get location of vars
+name <- names(full.logit[location]) # get names
+indep <- paste(name, collapse="+") # indep. variables
+dep <- paste("b2~") # dep. variable
+fmla <- as.formula(paste(dep, indep)) # get formula
+
+
+# Representative logit model whose AUC equals the MCCV average
+
+# training, test sample
+set.seed(4)
+indexes = sample(1:nrow(full.logit), size=0.632*nrow(full.logit), replace=F)
+test = full.logit[-indexes,]
+train = full.logit[indexes,]
+	
+# Regression
+logit<-glm(fmla, data=train, family="binomial")
+
+# OOS-analysis
+pred<-predict(logit, newdata=test, type="response") # predicted outcome
+
+true<-test[,"b2"] # real outcome
+
+library(pROC)
+r_log<-roc(true,pred,ci=F) # ROC analysis
+r_log
+
+```
+
+
 
 Ridge regression
 
@@ -70,6 +182,51 @@ misc.list <- c("b1","b3","rec1","rec2","rec3")
 location <- names(full_om) %in% c(misc.list) 
 name.indep <- names(full_om[!location])
 indep <- full_om[name.indep]
+grid = 10 ^ seq(2, -3, length=100)
+
+for(j in 1:runs) {
+	
+	# training, test sample
+	set.seed(j)
+	indexes = sample(1:nrow(full.logit), size=0.632*nrow(full), replace=F)
+	test = full.logit[-indexes,]
+	train = full.logit[indexes,]
+	
+	# Regression
+	
+	train.mat = model.matrix(fmla, data=train) 
+  test.mat = model.matrix(fmla, data=test)
+  mod.ridge = cv.glmnet(train.mat, train[, "b2"], alpha=0, lambda=grid, family="binomial", thresh=1e-12) 
+  lambda.best = mod.ridge$lambda.min 
+  ridge <- glmnet(train.mat, train[, "b2"], alpha=0, lambda=lambda.best, family="binomial", thresh=1e-12)
+  
+  ridge.probs = predict(mod.ridge, newx=test.mat, s=lambda.best, type="response")
+  true <- test[,"b2"]
+  r<-roc(true, ridge.probs, ci=T) 
+	
+	logit<-glm(fmla, data=train, family="binomial")
+	N[1,j] <- logit$df.null
+
+	# OOS-analysis
+	pred<-predict(logit, newdata=test, type="response") # predicted outcome
+
+	location <- names(test) %in% c("b2")
+	name <- names(test[location]) # get names
+	true<-test[,name] # real outcome
+
+	r<-roc(true,pred,ci=T) # ROC analysis
+	aucs[1,j] <- as.numeric(r$auc)
+		
+	ci95_lo[1,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[1]
+	ci95_up[1,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[3]
+
+}
+
+N <- as.numeric(colMeans(as.matrix(N[1, ]))) # update output table matrix
+
+auc<-as.numeric(colMeans(as.matrix(aucs[1, ])))
+ci95_lo<-as.numeric(colMeans(as.matrix(ci95_lo[1, ])))
+ci95_up<-as.numeric(colMeans(as.matrix(ci95_up[1, ])))
 
 #division of the sample
 set.seed(4)
@@ -83,79 +240,16 @@ test.mat = model.matrix(b2~., data=test)
 grid = 10 ^ seq(2, -3, length=100)
 mod.ridge = cv.glmnet(train.mat, train[, "b2"], alpha=0, lambda=grid, family="binomial", thresh=1e-12) 
 lambda.best = mod.ridge$lambda.min 
+
 ridge.probs = predict(mod.ridge, newx=test.mat, s=lambda.best, type="response")
 true <- test[,"b2"]
-r<-roc(true, ridge.probs, ci=T) # ROC analysis
+r<-roc(true, ridge.probs, ci=T) 
+
+# ROC analysis
+
 ###aucs[1,j] <- as.numeric(r$auc)		
 	#ci95_lo[1,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[1]
 	#ci95_up[1,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[3]
-
-
-```
-=======
----
-title: "Data Science Methods - Assignment 2"
-author:
-- "M. Alberti, s.n. 2020162"
-- "N. Ceschin, s.n. 344510"
-
-date: March 16, 2020
-output: pdf_document
-
----
-
-## Question 1
-
-First we upload all relevant libraries:
-
-```{r results='hide', message=FALSE, warning=FALSE}
-rm(list=ls())
-
-# load libraries
-library(leaps)
-library(glmnet) # for lasso and ridge
-library(Matrix)
-```
-
-Data preparation
-
-```{r results='hide', message=FALSE, warning=FALSE}
-setwd("C:/Users/nicol/Documents/Tilburg/Courses/Data Science Methods/DATA-SCIENCE-ASSIGNMENTS/Assignment 2")
-data<- read.csv("R_class.csv", sep=",", dec=".", header=TRUE)
-
-ca <- grep("ca", names(data), value=T)  #vector of names of columns containing ca
-drops <- names(data) %in% c(ca)
-data <- data[!drops]  
-
-# drop vars not used
-assets <- grep("assets", names(data), value=T)
-stocks <- grep("stocks", names(data), value=T)
-narrowm <- grep("narrowm", names(data), value=T)
-money <- grep("money", names(data), value=T)
-ltrate <- grep("ltrate", names(data), value=T)
-stir <- grep("stir", names(data), value=T)
-loans <- grep("loans", names(data), value=T)
-debt <- grep("debt", names(data), value=T)
-er <- grep("er", names(data), value=T)
-cpi <- grep("cpi", names(data), value=T)
-gap <- grep("gap", names(data), value=T)
-glo <- grep("a_", names(data), value=T)
-gdp <- grep("gdp", names(data), value=T)
-i <- grep("i_", names(data), value=T)
-c <- grep("c_", names(data), value=T)
-ri <- grep("ri", names(data), value=T)
-rc <- grep("rc", names(data), value=T)
-
-drops <- names(data) %in% c("year", "ccode", stocks, money, stir,assets,i,ri,glo) 
-saves <- names(data) %in% c(glo)
-full <- data[!drops] # drops those variables which have true indication in "drops"
-full <- cbind(data[glo], full)
-
-# FULL SET: omit observations with missing values
-full_om <- na.omit(full)
 ```
 
 
-
-
->>>>>>> 37e282b41b2b3b6b1e0ea1404fc551e6ee196297

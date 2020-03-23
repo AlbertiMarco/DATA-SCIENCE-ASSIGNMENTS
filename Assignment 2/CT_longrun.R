@@ -13,9 +13,11 @@ library(randomForest)
 #												PREPARATION													#
 ###############################################################
 setwd("C:/Users/oboldea/Dropbox/TEACHING/Courses 2019-2020/data science methods - master course/Homeworks/H2 2020/Data/fw-data")
+setwd("C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments/Assignment 2")
+
 #Daten  <- read.table("C:/Users/oboldea/Dropbox/TEACHING/Courses 2019-2020/data science methods - master course/Homeworks/H2 2020/Data/fw-data/R_class.csv", sep=",", dec=".", header=TRUE)
 Daten  <- read.table("C:/Users/oboldea/Dropbox/TEACHING/Courses 2019-2020/data science methods - master course/Homeworks/H2 2020/Data/fw-data/R_class.csv", sep=",", dec=".", header=TRUE)
-#Daten <- read.table("C:/Users/oboldea/Dropbox/TEACHING/Courses 2019-2020/data science methods - master course/Homeworks/H2 2020/Data/fw-data/R_class.csv", sep=",",dec=".",header=TRUE)
+Daten <- read.table("R_class.csv", sep=",",dec=".",header=TRUE)
 
 
 ca <- grep("ca", names(Daten), value=T)
@@ -52,7 +54,6 @@ sum(full_om$b2)/2
 
 # SELECTION SET:
 sel.list <- c("b2", "loans1_y_gap", "pdebt_gap", "narrowm_y_gap",  "rltrate", "gr_rgdp", "gr_cpi",  "er_gap", "loans1_y", "pdebt", "ltrate")
-location <- names(full) %in% c(sel.list) # get location of independent var
 name.sel <- names(full[location]) # get names of features
 sel <- full[name.sel]
 sel_om <- na.omit(sel)
