@@ -1,0 +1,417 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Data Science Methods - Assignment 2},
+  pdfauthor={M. Alberti, s.n. 2020162; N. Ceschin, s.n. 344510},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+
+\title{Data Science Methods - Assignment 2}
+\author{M. Alberti, s.n. 2020162 \and N. Ceschin, s.n. 344510}
+\date{March 16, 2020}
+
+\begin{document}
+\maketitle
+
+\hypertarget{question-1}{%
+\subsection{Question 1}\label{question-1}}
+
+First we upload all relevant libraries:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{rm}\NormalTok{(}\DataTypeTok{list=}\KeywordTok{ls}\NormalTok{())}
+
+\CommentTok{# load libraries}
+\KeywordTok{library}\NormalTok{(leaps)}
+\KeywordTok{library}\NormalTok{(glmnet) }\CommentTok{# for lasso and ridge}
+\KeywordTok{library}\NormalTok{(Matrix)}
+\KeywordTok{library}\NormalTok{(pROC)}
+\KeywordTok{library}\NormalTok{(xtable)}
+\end{Highlighting}
+\end{Shaded}
+
+Data preparation
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#setwd("C:/Users/nicol/Documents/Tilburg/Courses/Data Science Methods/DATA-SCIENCE-ASSIGNMENTS/Assignment 2")}
+\KeywordTok{setwd}\NormalTok{(}\StringTok{"C:/Users/Mr Nobody/Desktop/Uni/EME/Data science Methods/Assignments/Assignment 2"}\NormalTok{)}
+
+\NormalTok{data<-}\StringTok{ }\KeywordTok{read.csv}\NormalTok{(}\StringTok{"R_class.csv"}\NormalTok{, }\DataTypeTok{sep=}\StringTok{","}\NormalTok{, }\DataTypeTok{dec=}\StringTok{"."}\NormalTok{, }\DataTypeTok{header=}\OtherTok{TRUE}\NormalTok{)}
+
+\NormalTok{ca <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"ca"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)  }\CommentTok{#vector of names of columns containing ca}
+\NormalTok{drops <-}\StringTok{ }\KeywordTok{names}\NormalTok{(data) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(ca)}
+\NormalTok{data <-}\StringTok{ }\NormalTok{data[}\OperatorTok{!}\NormalTok{drops]  }
+
+\CommentTok{# drop vars not used}
+\NormalTok{assets <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"assets"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{stocks <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"stocks"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{narrowm <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"narrowm"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{money <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"money"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{ltrate <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"ltrate"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{stir <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"stir"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{loans <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"loans"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{debt <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"debt"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{er <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"er"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{cpi <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"cpi"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{gap <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"gap"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{glo <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"a_"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{gdp <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"gdp"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{i <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"i_"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{c <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"c_"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{ri <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"ri"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+\NormalTok{rc <-}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"rc"}\NormalTok{, }\KeywordTok{names}\NormalTok{(data), }\DataTypeTok{value=}\NormalTok{T)}
+
+\NormalTok{drops <-}\StringTok{ }\KeywordTok{names}\NormalTok{(data) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"year"}\NormalTok{, }\StringTok{"ccode"}\NormalTok{, stocks, money, stir,assets,i,ri,glo) }
+\NormalTok{saves <-}\StringTok{ }\KeywordTok{names}\NormalTok{(data) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(glo)}
+\NormalTok{full <-}\StringTok{ }\NormalTok{data[}\OperatorTok{!}\NormalTok{drops] }\CommentTok{# drops those variables which have true indication in "drops"}
+\NormalTok{full <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(data[glo], full)}
+
+\CommentTok{# FULL SET: omit observations with missing values}
+\NormalTok{full_om <-}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(full)}
+
+
+\CommentTok{#DATA for logit model}
+\CommentTok{## interaction-terms for logit model}
+\NormalTok{ia_pub<-data}\OperatorTok{$}\NormalTok{pdebt_gap}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{ltrate}
+\NormalTok{data}\OperatorTok{$}\NormalTok{ia_pub<-ia_pub}
+
+\NormalTok{ia_prb<-data}\OperatorTok{$}\NormalTok{loans1_y_gap}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{ltrate}
+\NormalTok{data}\OperatorTok{$}\NormalTok{ia_prb<-ia_prb}
+
+\NormalTok{ia_jb<-data}\OperatorTok{$}\NormalTok{loans1_y_gap}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{ltrate}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{pdebt_gap}
+\NormalTok{data}\OperatorTok{$}\NormalTok{ia_jb<-ia_jb}
+
+\NormalTok{ia_lygr<-data}\OperatorTok{$}\NormalTok{loans1_y}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{gr_rgdp}
+\NormalTok{data}\OperatorTok{$}\NormalTok{ia_lygr<-ia_lygr}
+
+\NormalTok{ia_pygr<-data}\OperatorTok{$}\NormalTok{pdebt}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{gr_rgdp}
+\NormalTok{data}\OperatorTok{$}\NormalTok{ia_pygr<-ia_pygr}
+
+\NormalTok{ia_lyer<-data}\OperatorTok{$}\NormalTok{loans1_y_gap}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{er_gap}
+\NormalTok{data}\OperatorTok{$}\NormalTok{ia_lyer<-ia_lyer}
+
+\CommentTok{## country factor}
+\NormalTok{data}\OperatorTok{$}\NormalTok{country.factor<-}\KeywordTok{as.factor}\NormalTok{(data}\OperatorTok{$}\NormalTok{ccode)}
+
+\CommentTok{#throw out vars not used}
+\NormalTok{drops.logit <-}\StringTok{ }\KeywordTok{names}\NormalTok{(data) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"year"}\NormalTok{) }\CommentTok{# true-false indicator: true at the names in vector}
+\NormalTok{full.logit <-}\StringTok{ }\NormalTok{data[}\OperatorTok{!}\NormalTok{drops] }\CommentTok{# drops those variables which have true indication in "drops"}
+\end{Highlighting}
+\end{Shaded}
+
+Preparation before running the estimation:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# variables}
+\NormalTok{var.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{( }\StringTok{"loans1_y_gap"}\NormalTok{, }\StringTok{"pdebt_gap"}\NormalTok{, }\StringTok{"narrowm_y_gap"}\NormalTok{,  }\StringTok{"rltrate"}\NormalTok{, }\StringTok{"gr_rgdp"}\NormalTok{, }\StringTok{"gr_cpi"}\NormalTok{,  }\StringTok{"er_gap"}\NormalTok{, }\StringTok{"loans1_y"}\NormalTok{, }\StringTok{"pdebt"}\NormalTok{, }\StringTok{"ltrate"}\NormalTok{)}
+\CommentTok{# model list}
+\NormalTok{model.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Ridge regression"}\NormalTok{, }\StringTok{"Lasso Regression"}\NormalTok{)}
+
+\CommentTok{# variables (logit)}
+\NormalTok{var.logit <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"loans1_y_gap"}\NormalTok{, }\StringTok{"pdebt_gap"}\NormalTok{, }\StringTok{"narrowm_y_gap"}\NormalTok{,  }\StringTok{"rltrate"}\NormalTok{, }\StringTok{"gr_rgdp"}\NormalTok{, }\StringTok{"gr_cpi"}\NormalTok{,  }\StringTok{"er_gap"}\NormalTok{)}
+\CommentTok{# interaction terms (logit)}
+\NormalTok{ia.logit <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"ia_pub"}\NormalTok{, }\StringTok{"ia_prb"}\NormalTok{, }\StringTok{"ia_jb"}\NormalTok{, }\StringTok{"ia_lygr"}\NormalTok{, }\StringTok{"ia_pygr"}\NormalTok{, }\StringTok{"ia_lyer"}\NormalTok{)}
+
+
+\CommentTok{# parameter list}
+\NormalTok{param.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"B"}\NormalTok{, }\StringTok{"$ J_\{try\} $"}\NormalTok{, }\StringTok{"$ J $"}\NormalTok{, }\StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{# of crises"}\NormalTok{)}
+\NormalTok{out.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{textbf\{Model\}"}\NormalTok{, }\StringTok{"AUC"}\NormalTok{, }\StringTok{"95}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{%-CI"}\NormalTok{, }\StringTok{"N"}\NormalTok{)}
+
+\CommentTok{# miscellaneous non-independent}
+\NormalTok{misc.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"b2"}\NormalTok{,}\StringTok{"b1"}\NormalTok{,}\StringTok{"b3"}\NormalTok{,}\StringTok{"rec1"}\NormalTok{,}\StringTok{"rec2"}\NormalTok{,}\StringTok{"rec3"}\NormalTok{)}
+
+\CommentTok{# table matrices}
+\NormalTok{out <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\DecValTok{5}\NormalTok{)}
+
+\CommentTok{# Bootstrap runs}
+\NormalTok{runs <-}\StringTok{ }\DecValTok{100}
+
+\CommentTok{# confidence intervals}
+\NormalTok{n.ci <-}\StringTok{ }\DecValTok{3}
+\NormalTok{ci <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\FloatTok{0.99}\NormalTok{, }\FloatTok{0.95}\NormalTok{, }\FloatTok{0.9}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Setting up the logit framework:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#LOGIT}
+
+\NormalTok{aucs <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\NormalTok{runs)}
+\NormalTok{ci95_lo <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\NormalTok{runs)}
+\NormalTok{ci95_up <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\NormalTok{runs)}
+
+\NormalTok{N <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\NormalTok{runs)}
+    
+
+\CommentTok{# get formula}
+\NormalTok{location <-}\StringTok{ }\KeywordTok{names}\NormalTok{(full.logit) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(var.logit, ia.logit,}\StringTok{"country.factor"}\NormalTok{) }\CommentTok{# get location of vars}
+\NormalTok{name <-}\StringTok{ }\KeywordTok{names}\NormalTok{(full.logit[location]) }\CommentTok{# get names}
+\NormalTok{indep <-}\StringTok{ }\KeywordTok{paste}\NormalTok{(name, }\DataTypeTok{collapse=}\StringTok{"+"}\NormalTok{) }\CommentTok{# indep. variables}
+\NormalTok{dep <-}\StringTok{ }\KeywordTok{paste}\NormalTok{(}\StringTok{"b2~"}\NormalTok{) }\CommentTok{# dep. variable}
+\NormalTok{fmla <-}\StringTok{ }\KeywordTok{as.formula}\NormalTok{(}\KeywordTok{paste}\NormalTok{(dep, indep)) }\CommentTok{# get formula}
+\end{Highlighting}
+\end{Shaded}
+
+Ridge regression:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#drop alternative independent variables}
+\NormalTok{misc.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"b1"}\NormalTok{,}\StringTok{"b3"}\NormalTok{,}\StringTok{"rec1"}\NormalTok{,}\StringTok{"rec2"}\NormalTok{,}\StringTok{"rec3"}\NormalTok{)}
+\NormalTok{location <-}\StringTok{ }\KeywordTok{names}\NormalTok{(full_om) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(misc.list) }
+\NormalTok{name.indep <-}\StringTok{ }\KeywordTok{names}\NormalTok{(full_om[}\OperatorTok{!}\NormalTok{location])}
+\NormalTok{indep <-}\StringTok{ }\NormalTok{full_om[name.indep]}
+\NormalTok{dep <-}\StringTok{ }\KeywordTok{factor}\NormalTok{(full_om[,}\StringTok{"b2"}\NormalTok{]}\OperatorTok{>}\DecValTok{0}\NormalTok{)}
+
+\NormalTok{grid =}\StringTok{ }\DecValTok{10} \OperatorTok{^}\StringTok{ }\KeywordTok{seq}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{-3}\NormalTok{, }\DataTypeTok{length=}\DecValTok{100}\NormalTok{)}
+
+\ControlFlowTok{for}\NormalTok{(j }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{runs) \{}
+    
+    \CommentTok{# training, test sample}
+    \KeywordTok{set.seed}\NormalTok{(j)}
+\NormalTok{    indexes =}\StringTok{ }\KeywordTok{sample}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(full.logit), }\DataTypeTok{size=}\FloatTok{0.632}\OperatorTok{*}\KeywordTok{nrow}\NormalTok{(full.logit), }\DataTypeTok{replace=}\NormalTok{F)}
+\NormalTok{    test =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(full.logit[}\OperatorTok{-}\NormalTok{indexes,])}
+\NormalTok{    train =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(full.logit[indexes,])}
+    
+    \CommentTok{# Ridge Regression}
+    
+\NormalTok{    train.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(fmla, }\DataTypeTok{data=}\NormalTok{train)}
+\NormalTok{  test.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(fmla, }\DataTypeTok{data=}\NormalTok{test)}
+\NormalTok{  mod.ridge =}\StringTok{ }\KeywordTok{cv.glmnet}\NormalTok{(train.mat, train[, }\StringTok{"b2"}\NormalTok{], }\DataTypeTok{alpha=}\DecValTok{0}\NormalTok{, }\DataTypeTok{lambda=}\NormalTok{grid, }\DataTypeTok{family=}\StringTok{"binomial"}\NormalTok{, }\DataTypeTok{thresh=}\FloatTok{1e-12}\NormalTok{) }
+\NormalTok{  lambda.best =}\StringTok{ }\NormalTok{mod.ridge}\OperatorTok{$}\NormalTok{lambda.min }
+  
+  \CommentTok{# OOS-analysis}
+\NormalTok{  pred =}\StringTok{ }\KeywordTok{predict}\NormalTok{(mod.ridge,test.mat, }\DataTypeTok{s=}\NormalTok{lambda.best, }\DataTypeTok{type=}\StringTok{"response"}\NormalTok{) }\CommentTok{# predicted outcome}
+
+\NormalTok{  N[}\DecValTok{1}\NormalTok{,j] <-}\StringTok{ }\NormalTok{mod.ridge[[}\StringTok{"glmnet.fit"}\NormalTok{]][[}\StringTok{"nobs"}\NormalTok{]]}
+  
+\NormalTok{  location <-}\StringTok{ }\KeywordTok{names}\NormalTok{(test) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"b2"}\NormalTok{)}
+\NormalTok{    name <-}\StringTok{ }\KeywordTok{names}\NormalTok{(test[location]) }\CommentTok{# get names}
+\NormalTok{    true<-test[,name] }\CommentTok{# real outcome}
+
+\NormalTok{    r<-}\KeywordTok{roc}\NormalTok{(true,}\KeywordTok{as.numeric}\NormalTok{(pred),}\DataTypeTok{ci=}\NormalTok{T) }\CommentTok{# ROC analysis}
+    
+\NormalTok{    aucs[}\DecValTok{1}\NormalTok{,j] <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(r}\OperatorTok{$}\NormalTok{auc)}
+        
+\NormalTok{    ci95_lo[}\DecValTok{1}\NormalTok{,j] <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{ci.auc}\NormalTok{(r,}\DataTypeTok{conf.level=}\NormalTok{ci[}\DecValTok{2}\NormalTok{]))[}\DecValTok{1}\NormalTok{]}
+\NormalTok{    ci95_up[}\DecValTok{1}\NormalTok{,j] <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{ci.auc}\NormalTok{(r,}\DataTypeTok{conf.level=}\NormalTok{ci[}\DecValTok{2}\NormalTok{]))[}\DecValTok{3}\NormalTok{]}
+
+\NormalTok{\}}
+
+\NormalTok{n_ridge <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(N[}\DecValTok{1}\NormalTok{, ])))) }\CommentTok{# update output table matrix}
+
+\NormalTok{auc_ridge<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(aucs[}\DecValTok{1}\NormalTok{, ])))}
+\NormalTok{ci95_lo_ridge<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(ci95_lo[}\DecValTok{1}\NormalTok{, ])))}
+\NormalTok{ci95_up_ridge<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(ci95_up[}\DecValTok{1}\NormalTok{, ])))}
+
+\NormalTok{out[}\DecValTok{1}\NormalTok{,}\DecValTok{1}\NormalTok{]<-model.list[}\DecValTok{1}\NormalTok{]}
+\NormalTok{out[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{]<-auc_ridge}
+\NormalTok{out[}\DecValTok{1}\NormalTok{,}\DecValTok{3}\NormalTok{]<-ci95_lo_ridge}
+\NormalTok{out[}\DecValTok{1}\NormalTok{,}\DecValTok{4}\NormalTok{]<-ci95_up_ridge}
+\NormalTok{out[}\DecValTok{1}\NormalTok{,}\DecValTok{5}\NormalTok{]<-n_ridge}
+\end{Highlighting}
+\end{Shaded}
+
+Lasso Regression
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ControlFlowTok{for}\NormalTok{(j }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{runs) \{}
+    
+    \CommentTok{# training, test sample}
+    \KeywordTok{set.seed}\NormalTok{(j)}
+\NormalTok{    indexes =}\StringTok{ }\KeywordTok{sample}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(full.logit), }\DataTypeTok{size=}\FloatTok{0.632}\OperatorTok{*}\KeywordTok{nrow}\NormalTok{(full.logit), }\DataTypeTok{replace=}\NormalTok{F)}
+\NormalTok{    test =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(full.logit[}\OperatorTok{-}\NormalTok{indexes,])}
+\NormalTok{    train =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(full.logit[indexes,])}
+    
+    \CommentTok{# Ridge Regression}
+    
+\NormalTok{    train.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(fmla, }\DataTypeTok{data=}\NormalTok{train)}
+\NormalTok{  test.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(fmla, }\DataTypeTok{data=}\NormalTok{test)}
+\NormalTok{  mod.lasso =}\StringTok{ }\KeywordTok{cv.glmnet}\NormalTok{(train.mat, train[, }\StringTok{"b2"}\NormalTok{], }\DataTypeTok{alpha=}\DecValTok{1}\NormalTok{, }\DataTypeTok{lambda=}\NormalTok{grid, }\DataTypeTok{family=}\StringTok{"binomial"}\NormalTok{, }\DataTypeTok{thresh=}\FloatTok{1e-12}\NormalTok{) }
+\NormalTok{  lambda.best =}\StringTok{ }\NormalTok{mod.lasso}\OperatorTok{$}\NormalTok{lambda.min }
+  
+  \CommentTok{# OOS-analysis}
+\NormalTok{  pred =}\StringTok{ }\KeywordTok{predict}\NormalTok{(mod.lasso,test.mat, }\DataTypeTok{s=}\NormalTok{lambda.best, }\DataTypeTok{type=}\StringTok{"response"}\NormalTok{) }\CommentTok{# predicted outcome}
+
+\NormalTok{  N[}\DecValTok{2}\NormalTok{,j] <-}\StringTok{ }\NormalTok{mod.lasso[[}\StringTok{"glmnet.fit"}\NormalTok{]][[}\StringTok{"nobs"}\NormalTok{]]}
+  
+\NormalTok{  location <-}\StringTok{ }\KeywordTok{names}\NormalTok{(test) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"b2"}\NormalTok{)}
+\NormalTok{    name <-}\StringTok{ }\KeywordTok{names}\NormalTok{(test[location]) }\CommentTok{# get names}
+\NormalTok{    true<-test[,name] }\CommentTok{# real outcome}
+
+\NormalTok{    r<-}\KeywordTok{roc}\NormalTok{(true,pred,}\DataTypeTok{ci=}\NormalTok{T) }\CommentTok{# ROC analysis}
+    
+\NormalTok{    aucs[}\DecValTok{2}\NormalTok{,j] <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(r}\OperatorTok{$}\NormalTok{auc)}
+        
+\NormalTok{    ci95_lo[}\DecValTok{2}\NormalTok{,j] <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{ci.auc}\NormalTok{(r,}\DataTypeTok{conf.level=}\NormalTok{ci[}\DecValTok{2}\NormalTok{]))[}\DecValTok{1}\NormalTok{]}
+\NormalTok{    ci95_up[}\DecValTok{2}\NormalTok{,j] <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{ci.auc}\NormalTok{(r,}\DataTypeTok{conf.level=}\NormalTok{ci[}\DecValTok{2}\NormalTok{]))[}\DecValTok{3}\NormalTok{]}
+
+\NormalTok{\}}
+
+\NormalTok{n_lasso <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(N[}\DecValTok{2}\NormalTok{, ])))) }\CommentTok{# update output table matrix}
+
+\NormalTok{auc_lasso<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(aucs[}\DecValTok{2}\NormalTok{, ])))}
+\NormalTok{ci95_lo_lasso<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(ci95_lo[}\DecValTok{2}\NormalTok{, ])))}
+\NormalTok{ci95_up_lasso<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(ci95_up[}\DecValTok{2}\NormalTok{, ])))}
+
+\NormalTok{out[}\DecValTok{2}\NormalTok{,}\DecValTok{1}\NormalTok{]<-model.list[}\DecValTok{2}\NormalTok{]}
+\NormalTok{out[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{]<-auc_lasso}
+\NormalTok{out[}\DecValTok{2}\NormalTok{,}\DecValTok{3}\NormalTok{]<-ci95_lo_lasso}
+\NormalTok{out[}\DecValTok{2}\NormalTok{,}\DecValTok{4}\NormalTok{]<-ci95_up_lasso}
+\NormalTok{out[}\DecValTok{2}\NormalTok{,}\DecValTok{5}\NormalTok{]<-n_lasso}
+\end{Highlighting}
+\end{Shaded}
+
+Output table:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#OUTPUT TABLE (always use double the amount of backslashes needed in latex)}
+
+\CommentTok{# reformat decimals}
+\NormalTok{out2<-out}
+\NormalTok{out2[,}\DecValTok{2}\OperatorTok{:}\DecValTok{5}\NormalTok{]<-}\KeywordTok{round}\NormalTok{(}\KeywordTok{as.numeric}\NormalTok{(out2[,}\DecValTok{2}\OperatorTok{:}\DecValTok{5}\NormalTok{]), }\DataTypeTok{digits=}\DecValTok{2}\NormalTok{)}
+
+\CommentTok{# confidence intervals}
+\NormalTok{cis<-}\KeywordTok{paste}\NormalTok{(out2[,}\DecValTok{3}\NormalTok{], out2[,}\DecValTok{4}\NormalTok{], }\DataTypeTok{sep=}\StringTok{","}\NormalTok{)}
+\NormalTok{cis<-}\KeywordTok{paste}\NormalTok{(}\StringTok{"["}\NormalTok{, cis, }\DataTypeTok{sep=}\StringTok{""}\NormalTok{)}
+\NormalTok{cis<-}\KeywordTok{paste}\NormalTok{(cis, }\StringTok{"]"}\NormalTok{, }\DataTypeTok{sep=}\StringTok{""}\NormalTok{)}
+
+\NormalTok{out3 <-}\StringTok{ }\NormalTok{out2[,}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{,}\DecValTok{5}\NormalTok{)] }\CommentTok{# leave out .9, .99 lower-ci columns}
+\NormalTok{out4 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(out3,cis)}
+\NormalTok{out5 <-}\StringTok{ }\NormalTok{out4[,}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{,}\DecValTok{4}\NormalTok{,}\DecValTok{3}\NormalTok{)] }
+\NormalTok{outF<-}\KeywordTok{rbind}\NormalTok{(out.list,out5) }\CommentTok{#get model headers}
+
+\CommentTok{# get rid of row and columnnames}
+\NormalTok{x <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(outF)}
+\NormalTok{outF<-}\KeywordTok{as.matrix}\NormalTok{(x)}
+\KeywordTok{rownames}\NormalTok{(outF) <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\StringTok{""}\NormalTok{, }\KeywordTok{nrow}\NormalTok{(outF))}
+\KeywordTok{colnames}\NormalTok{(outF) <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\StringTok{""}\NormalTok{, }\KeywordTok{ncol}\NormalTok{(outF))}
+
+\NormalTok{mat3<-}\KeywordTok{xtable}\NormalTok{(outF, }\DataTypeTok{align=}\StringTok{"ccccc"}\NormalTok{, }\DataTypeTok{caption=}\StringTok{"Comparison of Lasso and Ridge regression"}\NormalTok{, }\DataTypeTok{label=}\StringTok{"tab:output"}\NormalTok{) }
+
+\KeywordTok{print}\NormalTok{(mat3, }\DataTypeTok{type=}\StringTok{"latex"}\NormalTok{, }\DataTypeTok{caption.placement=}\StringTok{"top"}\NormalTok{, }\DataTypeTok{hline.after=}\KeywordTok{c}\NormalTok{(}\OperatorTok{-}\DecValTok{1}\NormalTok{,}\KeywordTok{nrow}\NormalTok{(mat3)), }\DataTypeTok{sanitize.text.function =} \ControlFlowTok{function}\NormalTok{(x)\{x\}, }\DataTypeTok{replace=}\NormalTok{T, }\DataTypeTok{floating=}\NormalTok{F, }\DataTypeTok{booktabs=}\NormalTok{T, }\DataTypeTok{include.colnames=}\NormalTok{F, }\DataTypeTok{include.rownames=}\NormalTok{F)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## % latex table generated in R 3.6.3 by xtable 1.8-4 package
+## % Tue Mar 24 18:07:03 2020
+## \begin{tabular}{cccc}
+##   \toprule
+##  \textbf{Model} & AUC & 95\%-CI & N \\ 
+##   Ridge regression & 0.65 & [0.57,0.73] & 1100 \\ 
+##   Lasso Regression & 0.64 & [0.56,0.72] & 1100 \\ 
+##    \bottomrule
+## \end{tabular}
+\end{verbatim}
+
+\begin{tabular}{cccc}
+  \toprule
+ \textbf{Model} & AUC & 95\%-CI & N \\ 
+  Ridge regression & 0.65 & [0.57,0.73] & 1099.71 \\ 
+  Lasso Regression & 0.64 & [0.56,0.72] & 1099.71 \\ 
+   \bottomrule
+\end{tabular}
+
+\end{document}

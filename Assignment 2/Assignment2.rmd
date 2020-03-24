@@ -22,6 +22,7 @@ library(leaps)
 library(glmnet) # for lasso and ridge
 library(Matrix)
 library(pROC)
+library(xtable)
 ```
 
 Data preparation
@@ -95,7 +96,7 @@ full.logit <- data[!drops] # drops those variables which have true indication in
 
 Preparation before running the estimation: 
 
-```{r}
+```{r results='hide', message=FALSE, warning=FALSE}
 # variables
 var.list <- c( "loans1_y_gap", "pdebt_gap", "narrowm_y_gap",  "rltrate", "gr_rgdp", "gr_cpi",  "er_gap", "loans1_y", "pdebt", "ltrate")
 # model list
@@ -109,17 +110,13 @@ ia.logit <- c("ia_pub", "ia_prb", "ia_jb", "ia_lygr", "ia_pygr", "ia_lyer")
 
 # parameter list
 param.list <- c("B", "$ J_{try} $", "$ J $", "\\# of crises")
-out.list <- c("\\textbf{Model}", "AUC", "95\\%-CI", "N", "", "AUC", "95\\%-CI", "N")
+out.list <- c("\\textbf{Model}", "AUC", "95\\%-CI", "N")
 
 # miscellaneous non-independent
 misc.list <- c("b2","b1","b3","rec1","rec2","rec3")
 
 # table matrices
-out <- matrix(nrow=3, ncol=9)
-spec <- matrix(nrow=4, ncol=7)
-sig_base <- matrix(nrow=3,ncol=2)
-sig_pre <- matrix(nrow=2,ncol=2)
-sig_many <- matrix(nrow=3,ncol=1)
+out <- matrix(nrow=2, ncol=5)
 
 # Bootstrap runs
 runs <- 100
@@ -132,14 +129,14 @@ ci <- c(0.99, 0.95, 0.9)
 
 Setting up the logit framework:
 
-```{r}
+```{r results='hide', message=FALSE, warning=FALSE}
 #LOGIT
 
-aucs <- matrix(nrow=1, ncol=runs)
-ci95_lo <- matrix(nrow=1, ncol=runs)
-ci95_up <- matrix(nrow=1, ncol=runs)
+aucs <- matrix(nrow=2, ncol=runs)
+ci95_lo <- matrix(nrow=2, ncol=runs)
+ci95_up <- matrix(nrow=2, ncol=runs)
 
-N <- matrix(nrow=1, ncol=runs)
+N <- matrix(nrow=2, ncol=runs)
 	
 
 # get formula
@@ -149,72 +146,46 @@ indep <- paste(name, collapse="+") # indep. variables
 dep <- paste("b2~") # dep. variable
 fmla <- as.formula(paste(dep, indep)) # get formula
 
-
-# Representative logit model whose AUC equals the MCCV average
-
-# training, test sample
-set.seed(4)
-indexes = sample(1:nrow(full.logit), size=0.632*nrow(full.logit), replace=F)
-test = full.logit[-indexes,]
-train = full.logit[indexes,]
-	
-# Regression
-logit<-glm(fmla, data=train, family="binomial")
-
-# OOS-analysis
-pred<-predict(logit, newdata=test, type="response") # predicted outcome
-
-true<-test[,"b2"] # real outcome
-
-library(pROC)
-r_log<-roc(true,pred,ci=F) # ROC analysis
-r_log
-
 ```
 
+Ridge regression:
 
-
-Ridge regression
-
-```{r warning=FALSE}
+```{r results='hide', message=FALSE, warning=FALSE}
 #drop alternative independent variables
 misc.list <- c("b1","b3","rec1","rec2","rec3")
 location <- names(full_om) %in% c(misc.list) 
 name.indep <- names(full_om[!location])
 indep <- full_om[name.indep]
+dep <- factor(full_om[,"b2"]>0)
+
 grid = 10 ^ seq(2, -3, length=100)
 
 for(j in 1:runs) {
 	
 	# training, test sample
 	set.seed(j)
-	indexes = sample(1:nrow(full.logit), size=0.632*nrow(full), replace=F)
-	test = full.logit[-indexes,]
-	train = full.logit[indexes,]
+	indexes = sample(1:nrow(full.logit), size=0.632*nrow(full.logit), replace=F)
+	test = na.omit(full.logit[-indexes,])
+	train = na.omit(full.logit[indexes,])
 	
-	# Regression
+	# Ridge Regression
 	
-	train.mat = model.matrix(fmla, data=train) 
+	train.mat = model.matrix(fmla, data=train)
   test.mat = model.matrix(fmla, data=test)
   mod.ridge = cv.glmnet(train.mat, train[, "b2"], alpha=0, lambda=grid, family="binomial", thresh=1e-12) 
   lambda.best = mod.ridge$lambda.min 
-  ridge <- glmnet(train.mat, train[, "b2"], alpha=0, lambda=lambda.best, family="binomial", thresh=1e-12)
   
-  ridge.probs = predict(mod.ridge, newx=test.mat, s=lambda.best, type="response")
-  true <- test[,"b2"]
-  r<-roc(true, ridge.probs, ci=T) 
-	
-	logit<-glm(fmla, data=train, family="binomial")
-	N[1,j] <- logit$df.null
+  # OOS-analysis
+  pred = predict(mod.ridge,test.mat, s=lambda.best, type="response") # predicted outcome
 
-	# OOS-analysis
-	pred<-predict(logit, newdata=test, type="response") # predicted outcome
-
-	location <- names(test) %in% c("b2")
+  N[1,j] <- mod.ridge[["glmnet.fit"]][["nobs"]]
+  
+  location <- names(test) %in% c("b2")
 	name <- names(test[location]) # get names
 	true<-test[,name] # real outcome
 
-	r<-roc(true,pred,ci=T) # ROC analysis
+	r<-roc(true,as.numeric(pred),ci=T) # ROC analysis
+	
 	aucs[1,j] <- as.numeric(r$auc)
 		
 	ci95_lo[1,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[1]
@@ -222,34 +193,139 @@ for(j in 1:runs) {
 
 }
 
-N <- as.numeric(colMeans(as.matrix(N[1, ]))) # update output table matrix
+n_ridge <- trunc(as.numeric(colMeans(as.matrix(N[1, ])))) # update output table matrix
 
-auc<-as.numeric(colMeans(as.matrix(aucs[1, ])))
-ci95_lo<-as.numeric(colMeans(as.matrix(ci95_lo[1, ])))
-ci95_up<-as.numeric(colMeans(as.matrix(ci95_up[1, ])))
+auc_ridge<-as.numeric(colMeans(as.matrix(aucs[1, ])))
+ci95_lo_ridge<-as.numeric(colMeans(as.matrix(ci95_lo[1, ])))
+ci95_up_ridge<-as.numeric(colMeans(as.matrix(ci95_up[1, ])))
 
-#division of the sample
-set.seed(4)
-indexes = sample(1:nrow(full_om), size=0.632*nrow(full), replace=F)
-test = full_om[-indexes,]
-train = full_om[indexes,]
+out[1,1]<-model.list[1]
+out[1,2]<-auc_ridge
+out[1,3]<-ci95_lo_ridge
+out[1,4]<-ci95_up_ridge
+out[1,5]<-n_ridge
 
-#Run ridge
-train.mat = model.matrix(b2~., data=train) 
-test.mat = model.matrix(b2~., data=test)
-grid = 10 ^ seq(2, -3, length=100)
-mod.ridge = cv.glmnet(train.mat, train[, "b2"], alpha=0, lambda=grid, family="binomial", thresh=1e-12) 
-lambda.best = mod.ridge$lambda.min 
-
-ridge.probs = predict(mod.ridge, newx=test.mat, s=lambda.best, type="response")
-true <- test[,"b2"]
-r<-roc(true, ridge.probs, ci=T) 
-
-# ROC analysis
-
-###aucs[1,j] <- as.numeric(r$auc)		
-	#ci95_lo[1,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[1]
-	#ci95_up[1,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[3]
 ```
+
+Lasso Regression 
+
+```{r results='hide', warning=FALSE, message=FALSE}
+
+for(j in 1:runs) {
+	
+	# training, test sample
+	set.seed(j+100)
+	indexes = sample(1:nrow(full.logit), size=0.632*nrow(full.logit), replace=F)
+	test = na.omit(full.logit[-indexes,])
+	train = na.omit(full.logit[indexes,])
+	
+	# Ridge Regression
+	
+	train.mat = model.matrix(fmla, data=train)
+  test.mat = model.matrix(fmla, data=test)
+  mod.lasso = cv.glmnet(train.mat, train[, "b2"], alpha=1, lambda=grid, family="binomial", thresh=1e-12) 
+  lambda.best = mod.lasso$lambda.min 
+  
+  # OOS-analysis
+  pred = predict(mod.lasso,test.mat, s=lambda.best, type="response") # predicted outcome
+
+  N[2,j] <- mod.lasso[["glmnet.fit"]][["nobs"]]
+  
+  location <- names(test) %in% c("b2")
+	name <- names(test[location]) # get names
+	true<-test[,name] # real outcome
+
+	r<-roc(true,pred,ci=T) # ROC analysis
+	
+	aucs[2,j] <- as.numeric(r$auc)
+		
+	ci95_lo[2,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[1]
+	ci95_up[2,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[3]
+
+}
+
+# update output table matrix
+
+n_lasso <- trunc(as.numeric(colMeans(as.matrix(N[2, ])))) 
+auc_lasso<-as.numeric(colMeans(as.matrix(aucs[2, ])))
+ci95_lo_lasso<-as.numeric(colMeans(as.matrix(ci95_lo[2, ])))
+ci95_up_lasso<-as.numeric(colMeans(as.matrix(ci95_up[2, ])))
+
+out[2,1]<-model.list[2]
+out[2,2]<-auc_lasso
+out[2,3]<-ci95_lo_lasso
+out[2,4]<-ci95_up_lasso
+out[2,5]<-n_lasso
+
+
+```
+
+Output table:
+
+```{r}
+#OUTPUT TABLE (always use double the amount of backslashes needed in latex)
+
+# reformat decimals
+out2<-out
+out2[,2:5]<-round(as.numeric(out2[,2:5]), digits=2)
+
+# confidence intervals
+cis<-paste(out2[,3], out2[,4], sep=",")
+cis<-paste("[", cis, sep="")
+cis<-paste(cis, "]", sep="")
+
+out3 <- out2[,c(1,2,5)] # leave out .9, .99 lower-ci columns
+out4 <- cbind(out3,cis)
+out5 <- out4[,c(1,2,4,3)] 
+outF<-rbind(out.list,out5) #get model headers
+
+# get rid of row and columnnames
+x <- data.frame(outF)
+outF<-as.matrix(x)
+rownames(outF) <- rep("", nrow(outF))
+colnames(outF) <- rep("", ncol(outF))
+
+mat3<-xtable(outF, align="ccccc", caption="Comparison of Lasso and Ridge regression", label="tab:output") 
+
+print(mat3, type="latex", caption.placement="top", hline.after=c(-1,nrow(mat3)), sanitize.text.function = function(x){x}, replace=T, floating=F, booktabs=T, include.colnames=F, include.rownames=F)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+\usepackage{booktabs}
+
+\begin{table}[ht]
+\centering
+  \begin{tabular}{cccc}
+  \toprule
+  \multicolumn{5}{\textbf{Many Predictors}}
+  \textbf{Model} & AUC & 95\%-CI & N \\ 
+  \middlerule
+  Ridge regression & 0.65 & [0.57,0.73] & 1099 \\ 
+  Lasso Regression & 0.64 & [0.56,0.72] & 1099 \\ 
+  \bottomrule
+\end{tabular}
+\caption{Comparison of Lasso and Ridge regression} 
+\label{tab:output}
+\end{table}
+
+
+
+
+
+
+
+
+
 
 
