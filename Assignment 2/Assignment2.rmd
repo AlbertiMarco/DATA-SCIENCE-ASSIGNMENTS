@@ -101,7 +101,7 @@ misc.list <- c("b2","b1","b3","rec1","rec2","rec3")
 out <- matrix(nrow=2, ncol=5)
 
 # Bootstrap runs
-runs <- 2
+runs <- 20
 
 # confidence intervals
 n.ci <- 3
