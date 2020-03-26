@@ -293,6 +293,7 @@ print(mat3, type="latex", caption.placement="top", hline.after=c(-1,nrow(mat3)),
 ```
 
 ##Question 2
+# a) 
 Plain lasso optimization problem
 $$  \hat{\bm \beta_{L}} =\arg\min_{\bm \beta}\left[ \Vert\bm y-\sum_{j=1}^{p} \bm x_j \beta_j \Vert^2 + \lambda\sum_{j=1}^{p}|\beta_j|\right]$$
 Adaptive lasso optimization problem
@@ -303,10 +304,9 @@ On the contrary, adaptive lasso is recommended when we are interested in the in-
 The tuning parameters are usually selected from the cross-validated MSE. In plain lasso, there is one tuning paramter, $\lambda$, while in the adaptive lasso there are two, $\gamma and \lambda$, so the cross-validation will be two-dimensional. Even if it does not have sound statistical foundations, sometimes it is suggested to pick not the $\lambda$ that minimizes the cross-validated MSE, but the one  that is one standard error above it.
 
 
-
-
-
-
+# b)
+The most intuitive reason to apply other estimation techniques after having found the true model by adaptive lasso (under some regularity conditions) is that shrinkage estimators are inherently biased. The penalty in the objective function ($\lambda$ above) enters the estimator formula, producing a bias. This bias tends to be high especially in finite samples. Therefore, it is reasonably better to apply adaptive lasso to find the covariates which characterize the true model and then apply an unbiased estimation technique on this restricted set of covariates.
+Antoher possible reason we can think about could be that in some estimation techniques (as OLS) the higher the number of regressors, the higher the variance of the final estimator. Therefore, this would end up in higher standard errors and this could eventually inflate p-values. Thus, running estimation on a smaller set of covariates would yield a more precise estiamtors, with lower standard errors. However, the significance of finalcoefficients would potentially not be a problem, as we assume that adaptive lasso already selects just the covariates different from 0.
 
 
 
