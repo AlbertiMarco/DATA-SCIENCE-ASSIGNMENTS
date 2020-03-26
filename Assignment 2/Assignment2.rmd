@@ -6,6 +6,22 @@ author:
 - "N. Ceschin, s.n. 344510"
 header-includes:
   - \usepackage{bm}
+  - \usepackage{booktabs}
+  - \usepackage{multirow}
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{wrapfig}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{tabu}
+  - \usepackage{threeparttable}
+  - \usepackage{threeparttablex}
+  - \usepackage[normalem]{ulem}
+  - \usepackage{makecell}
+  - \usepackage{xcolor}
 date: March 16, 2020
 output: pdf_document
 
@@ -24,6 +40,9 @@ library(glmnet) # for lasso and ridge
 library(Matrix)
 library(pROC)
 library(xtable)
+library(knitr)
+library(kableExtra)
+library(dplyr)
 ```
 
 Data preparation
@@ -65,53 +84,15 @@ full <- cbind(data[glo], full)
 # FULL SET: omit observations with missing values
 full_om <- na.omit(full)
 
-
-#DATA for logit model
-## interaction-terms for logit model
-ia_pub<-data$pdebt_gap*data$ltrate
-data$ia_pub<-ia_pub
-
-ia_prb<-data$loans1_y_gap*data$ltrate
-data$ia_prb<-ia_prb
-
-ia_jb<-data$loans1_y_gap*data$ltrate*data$pdebt_gap
-data$ia_jb<-ia_jb
-
-ia_lygr<-data$loans1_y*data$gr_rgdp
-data$ia_lygr<-ia_lygr
-
-ia_pygr<-data$pdebt*data$gr_rgdp
-data$ia_pygr<-ia_pygr
-
-ia_lyer<-data$loans1_y_gap*data$er_gap
-data$ia_lyer<-ia_lyer
-
-## country factor
-data$country.factor<-as.factor(data$ccode)
-
-#throw out vars not used
-drops.logit <- names(data) %in% c("year") # true-false indicator: true at the names in vector
-full.logit <- data[!drops] # drops those variables which have true indication in "drops"
-
 ```
 
 Preparation before running the estimation: 
 
 ```{r results='hide', message=FALSE, warning=FALSE}
-# variables
-var.list <- c( "loans1_y_gap", "pdebt_gap", "narrowm_y_gap",  "rltrate", "gr_rgdp", "gr_cpi",  "er_gap", "loans1_y", "pdebt", "ltrate")
 # model list
 model.list <- c("Ridge regression", "Lasso Regression")
 
-# variables (logit)
-var.logit <- c("loans1_y_gap", "pdebt_gap", "narrowm_y_gap",  "rltrate", "gr_rgdp", "gr_cpi",  "er_gap")
-# interaction terms (logit)
-ia.logit <- c("ia_pub", "ia_prb", "ia_jb", "ia_lygr", "ia_pygr", "ia_lyer")
-
-
-# parameter list
-param.list <- c("B", "$ J_{try} $", "$ J $", "\\# of crises")
-out.list <- c("\\textbf{Model}", "AUC", "95\\%-CI", "N")
+out.list <- c("Model", "AUC", "95%-CI", "N")
 
 # miscellaneous non-independent
 misc.list <- c("b2","b1","b3","rec1","rec2","rec3")
@@ -120,32 +101,11 @@ misc.list <- c("b2","b1","b3","rec1","rec2","rec3")
 out <- matrix(nrow=2, ncol=5)
 
 # Bootstrap runs
-runs <- 100
+runs <- 2
 
 # confidence intervals
 n.ci <- 3
 ci <- c(0.99, 0.95, 0.9)
-
-```
-
-Setting up the logit framework:
-
-```{r results='hide', message=FALSE, warning=FALSE}
-#LOGIT
-
-aucs <- matrix(nrow=2, ncol=runs)
-ci95_lo <- matrix(nrow=2, ncol=runs)
-ci95_up <- matrix(nrow=2, ncol=runs)
-
-N <- matrix(nrow=2, ncol=runs)
-	
-
-# get formula
-location <- names(full.logit) %in% c(var.logit, ia.logit,"country.factor") # get location of vars
-name <- names(full.logit[location]) # get names
-indep <- paste(name, collapse="+") # indep. variables
-dep <- paste("b2~") # dep. variable
-fmla <- as.formula(paste(dep, indep)) # get formula
 
 ```
 
@@ -158,34 +118,35 @@ location <- names(full_om) %in% c(misc.list)
 name.indep <- names(full_om[!location])
 indep <- full_om[name.indep]
 dep <- factor(full_om[,"b2"]>0)
-
+aucs <- matrix(nrow=2, ncol=runs)
+ci95_lo <- matrix(nrow=2, ncol=runs)
+ci95_up <- matrix(nrow=2, ncol=runs)
+N <- matrix(nrow=2, ncol=runs)
+	
 grid = 10 ^ seq(2, -3, length=100)
 
 for(j in 1:runs) {
 	
 	# training, test sample
 	set.seed(j)
-	indexes = sample(1:nrow(full.logit), size=0.632*nrow(full.logit), replace=F)
-	test = na.omit(full.logit[-indexes,])
-	train = na.omit(full.logit[indexes,])
+	indexes = sample(1:nrow(full_om), size=0.632*nrow(full_om), replace=F)
+	test = full_om[-indexes,]
+	train = full_om[indexes,]
 	
 	# Ridge Regression
-	
-	train.mat = model.matrix(fmla, data=train)
-  test.mat = model.matrix(fmla, data=test)
-  mod.ridge = cv.glmnet(train.mat, train[, "b2"], alpha=0, lambda=grid, family="binomial", thresh=1e-12) 
+	train.mat = model.matrix(b2~., data=train) 
+  test.mat = model.matrix(b2~., data=test)
+  mod.ridge = cv.glmnet(train.mat, train[, "b2"], alpha=0, lambda=grid, family="binomial", thresh=1e-12)
   lambda.best = mod.ridge$lambda.min 
   
   # OOS-analysis
-  pred = predict(mod.ridge,test.mat, s=lambda.best, type="response") # predicted outcome
+  ridge.prob = predict(mod.ridge,newx=test.mat, s=lambda.best, type="response") # predicted outcome
 
-  N[1,j] <- mod.ridge[["glmnet.fit"]][["nobs"]]
-  
-  location <- names(test) %in% c("b2")
-	name <- names(test[location]) # get names
-	true<-test[,name] # real outcome
+  N[1,j] <- mod.ridge[["glmnet.fit"]][["nobs"]] #??
 
-	r<-roc(true,as.numeric(pred),ci=T) # ROC analysis
+	true<-test[,"b2"] # real outcome
+
+	r<-roc(true,as.numeric(ridge.prob),ci=T) # ROC analysis
 	
 	aucs[1,j] <- as.numeric(r$auc)
 		
@@ -211,32 +172,28 @@ out[1,5]<-n_ridge
 Lasso Regression 
 
 ```{r results='hide', warning=FALSE, message=FALSE}
-
 for(j in 1:runs) {
 	
 	# training, test sample
 	set.seed(j+100)
-	indexes = sample(1:nrow(full.logit), size=0.632*nrow(full.logit), replace=F)
-	test = na.omit(full.logit[-indexes,])
-	train = na.omit(full.logit[indexes,])
+	indexes = sample(1:nrow(full_om), size=0.632*nrow(full_om), replace=F)
+	test = full_om[-indexes,]
+	train = full_om[indexes,]
 	
-	# Ridge Regression
-	
-	train.mat = model.matrix(fmla, data=train)
-  test.mat = model.matrix(fmla, data=test)
-  mod.lasso = cv.glmnet(train.mat, train[, "b2"], alpha=1, lambda=grid, family="binomial", thresh=1e-12) 
+  #Lasso regression
+	train.mat = model.matrix(b2~., data=train) 
+  test.mat = model.matrix(b2~., data=test)
+  mod.lasso = cv.glmnet(train.mat, train[, "b2"], alpha=1, lambda=grid, family="binomial", thresh=1e-12)
   lambda.best = mod.lasso$lambda.min 
   
   # OOS-analysis
-  pred = predict(mod.lasso,test.mat, s=lambda.best, type="response") # predicted outcome
+  lasso.prob = predict(mod.lasso,newx=test.mat, s=lambda.best, type="response") # predicted outcome
 
   N[2,j] <- mod.lasso[["glmnet.fit"]][["nobs"]]
-  
-  location <- names(test) %in% c("b2")
-	name <- names(test[location]) # get names
-	true<-test[,name] # real outcome
 
-	r<-roc(true,pred,ci=T) # ROC analysis
+	true<-test[,"b2"] # real outcome
+
+	r<-roc(true,lasso.prob,ci=T) # ROC analysis
 	
 	aucs[2,j] <- as.numeric(r$auc)
 		
@@ -244,8 +201,6 @@ for(j in 1:runs) {
 	ci95_up[2,j] <- as.numeric(ci.auc(r,conf.level=ci[2]))[3]
 
 }
-
-# update output table matrix
 
 n_lasso <- trunc(as.numeric(colMeans(as.matrix(N[2, ])))) 
 auc_lasso<-as.numeric(colMeans(as.matrix(aucs[2, ])))
@@ -257,6 +212,9 @@ out[2,2]<-auc_lasso
 out[2,3]<-ci95_lo_lasso
 out[2,4]<-ci95_up_lasso
 out[2,5]<-n_lasso
+
+
+
 
 
 ```
@@ -277,36 +235,33 @@ cis<-paste(cis, "]", sep="")
 
 out3 <- out2[,c(1,2,5)] # leave out .9, .99 lower-ci columns
 out4 <- cbind(out3,cis)
-out5 <- out4[,c(1,2,4,3)] 
-outF<-rbind(out.list,out5) #get model headers
+outF <- out4[,c(1,2,4,3)] 
+colnames(outF)<-out.list
+outF<-as.data.frame(outF)
 
-# get rid of row and columnnames
-x <- data.frame(outF)
-outF<-as.matrix(x)
-rownames(outF) <- rep("", nrow(outF))
-colnames(outF) <- rep("", ncol(outF))
-
-mat3<-xtable(outF, align="ccccc", caption="Comparison of Lasso and Ridge regression", label="tab:output") 
-
-print(mat3, type="latex", caption.placement="top", hline.after=c(-1,nrow(mat3)), sanitize.text.function = function(x){x}, replace=T, floating=F, booktabs=T, include.colnames=F, include.rownames=F)
+kable(outF, "latex", booktabs = T,row.names = FALSE) %>%
+  kable_styling(latex_options = "striped")
 
 ```
 
+
+
 ##Question 2
 # a) 
+
 Plain lasso optimization problem
 $$  \hat{\bm \beta_{L}} =\arg\min_{\bm \beta}\left[ \Vert\bm y-\sum_{j=1}^{p} \bm x_j \beta_j \Vert^2 + \lambda\sum_{j=1}^{p}|\beta_j|\right]$$
 Adaptive lasso optimization problem
 $$  \hat{\bm \beta_{AL}} =\arg\min_{\bm \beta}\left[ \Vert\bm y-\sum_{j=1}^{p} \bm x_j \beta_j \Vert^2 + \lambda\sum_{j=1}^{p}|\beta_j|w_j\right]$$
 with $w_i=\frac{1}{|\hat\beta_P|^{\gamma}}$, $\gamma\in\{1,2\}, \bm\beta_P$ pre-estimator.
-Plain lasso is a less parsimonious model, it is suggested when we are interested in out-of-sample performance of our model (prediction). 
-On the contrary, adaptive lasso is recommended when we are interested in the in-sample properties of the estimated parameters. The weight $w_j$ is inversely proportional to the magnitude of the coefficients in the preestimation: higher coefficients get penalized less in adaptive lasso. Therefore, coefficients that are smaller in the pre-estimation are potentially shrunk to zero. Adaptive lasso is therefore more parsimonious than plain lasso. Coefficients that would be close to zero in plain lasso are probably biased and in adaptive lasso they get penalized further and shrunk to zero. Under mild conditions, this method can select the true underlying model.
-The tuning parameters are usually selected from the cross-validated MSE. In plain lasso, there is one tuning paramter, $\lambda$, while in the adaptive lasso there are two, $\gamma and \lambda$, so the cross-validation will be two-dimensional. Even if it does not have sound statistical foundations, sometimes it is suggested to pick not the $\lambda$ that minimizes the cross-validated MSE, but the one  that is one standard error above it.
+Plain lasso is a less parsimonious model, it is suggested when we are interested in out-of-sample performance of our model (prediction).  
+On the contrary, adaptive lasso is recommended when we are interested in the in-sample properties of the estimated parameters. The weight $w_j$ is inversely proportional to the magnitude of the coefficients in the preestimation: higher coefficients get penalized less in adaptive lasso. Therefore, coefficients that are smaller in the pre-estimation are potentially shrunk to zero. Adaptive lasso is therefore more parsimonious than plain lasso. Coefficients that would be close to zero in plain lasso are probably biased and in adaptive lasso they get penalized further and shrunk to zero. Under mild conditions, this method can select the true underlying model.  
+The tuning parameters are usually selected from the cross-validated MSE. In plain lasso, there is one tuning paramter, $\lambda$, while in the adaptive lasso there are two, $\gamma$ and $\lambda$, so the cross-validation will be two-dimensional. Even if it does not have sound statistical foundations, sometimes it is suggested to pick not the $\lambda$ that minimizes the cross-validated MSE, but the one  that is one standard error above it.
 
 
 # b)
-The most intuitive reason to apply other estimation techniques after having found the true model by adaptive lasso (under some regularity conditions) is that shrinkage estimators are inherently biased. The penalty in the objective function ($\lambda$ above) enters the estimator formula, producing a bias. This bias tends to be high especially in finite samples. Therefore, it is reasonably better to apply adaptive lasso to find the covariates which characterize the true model and then apply an unbiased estimation technique on this restricted set of covariates.
-Antoher possible reason we can think about could be that in some estimation techniques (as OLS) the higher the number of regressors, the higher the variance of the final estimator. Therefore, this would end up in higher standard errors and this could eventually inflate p-values. Thus, running estimation on a smaller set of covariates would yield a more precise estiamtors, with lower standard errors. However, the significance of finalcoefficients would potentially not be a problem, as we assume that adaptive lasso already selects just the covariates different from 0.
+The most intuitive reason to apply other estimation techniques after having found the true model by adaptive lasso (under some regularity conditions) is that shrinkage estimators are inherently biased. The penalty in the objective function ($\lambda$ above) enters the estimator formula, producing a bias. This bias tends to be high especially in finite samples. Therefore, it is reasonably better to apply adaptive lasso to find the covariates which characterize the true model and then apply an unbiased estimation technique on this restricted set of covariates.  
+Antoher possible reason we can think about could be that in some estimation techniques (as OLS) the higher the number of regressors, the higher the variance of the final estimator. Therefore, this would end up in higher standard errors and this could eventually inflate p-values. Thus, running estimation on a smaller set of covariates would yield a more precise estimators, with lower standard errors. However, the significance of final coefficients would potentially not be a problem, as we assume that adaptive lasso already selects just the covariates different from 0.
 
 
 
