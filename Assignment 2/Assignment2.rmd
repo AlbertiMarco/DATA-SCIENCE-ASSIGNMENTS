@@ -264,3 +264,93 @@ Useful links https://arxiv.org/pdf/1509.09169.pdf https://www.statlect.com/funda
 
 
 ## a
+Proof of BIAS:
+
+\begin{gather*}
+    BIAS=E[\hat{\beta}(\lambda)|X]-\beta \\
+    \\
+    E[\hat{\beta}(\lambda)|X]=E[W(\lambda)X^T Y|X]=E[W(\lambda)X^T (X\beta+\epsilon)|X] \\
+    \\
+     = W(\lambda)X^T X\beta+W(\lambda)X^T \underbrace{E(\epsilon|X)}_{=0} = W(\lambda)X^T X\beta \\
+     \\
+     BIAS=W(\lambda)X^T X\beta-\beta=[W(\lambda)-(X^T X)^{-1}]X^T X\beta
+\end{gather*}
+
+%Anche qui manca un passaggio per arrivare alla risposta 
+
+## b
+
+Proof of variance:
+\begin{gather*}
+    Var[\hat{\beta}(\lambda)|X]=Var[W(\lambda)X^T Y|X]=Var[W(\lambda)X^T (X\beta+\epsilon)|X] \\
+    \\
+    =Var[(X^TX+\lambda I_p)^{-1}X^T (X\beta+\epsilon)|X]
+\end{gather*}
+
+Noticing that the first term is constant given $X$, $\lambda$ and $\beta$ and recalling that $Var(a+X)=Var(X)$ with $a$ being a constant; we can simplify as follows: \\
+\begin{gather*}
+    Var[(X^TX+\lambda I_p)^{-1}X^T (X\beta+\epsilon)|X]=Var[W(\lambda)X^T\epsilon|X]=W(\lambda)X^TVar[\epsilon|X]XW(\lambda)^T \\
+    =W(\lambda)X^T\sigma^2I_T X W(\lambda)^T=\sigma^2W(\lambda)(X^TX) W(\lambda)^T
+\end{gather*}
+
+We then can write:
+
+ \begin{gather*}
+ Var[\hat{\beta}(0)|X]-Var[\hat{\beta}(\lambda)|X]=\sigma^2[(X^TX)^{-1}-W(\lambda)(X^TX) W(\lambda)^T] \\
+ = \sigma^2 W(\lambda)[W(\lambda)^{-1}(X^TX)^{-1}(W(\lambda)^T)^{-1}-(X^TX)]W(\lambda)^T \\
+ = \sigma^2 W(\lambda)[[X^TX+\lambdaI_p](X^TX)^{-1}[X^TX+\lambdaI_p]^T-(X^TX)]W(\lambda)^T \\
+ \implies Var[\hat{\beta}(0)|X]-Var[\hat{\beta}(\lambda)|X]=\sigma^2W_{\lambda}[2\lambda I_p+\lambda^2(X^T X)^{-1}]W_{\lambda}
+ \end{gather*}
+\newline
+It is easy to see that for $\lambda>0$, this matrix is positive definite because for any $\nu \neq 0$, we have:
+
+\[ z=W_\lambda \nu \neq 0\] 
+and 
+
+ \begin{gather*}
+ \nu^T[Var[\hat{\beta}(0)|X]-Var[\hat{\beta}(\lambda)|X]]\nu=\sigma^2 z^T[2\lambda I_p+\lambda^2(X^TX)^{-1}]z \\
+ =\sigma^2 \lambdaz^Tz+\sigma^2\lambda^2z^T(X^TX)^{-1}z>0
+ \end{gather*}
+
+This shows that although biased, the ridge estimator is more efficient than the OLS one. 
+
+## c
+
+We have that:
+
+\begin{gather*}
+    PMSE(\beta(\lambda)|X)=E\left[|| X\hat{\beta}(\lambda)-X\beta||^2 \ | X\right]=E[(\hat{\beta}(\lambda)-\beta)^TX^TX(\hat{\beta}(\lambda)-\beta) \ | X] \\
+\end{gather*}
+
+Then taking the difference between $PSME(\beta(0)|X)-PSME(\beta(\lambda)|X)$ gives:
+
+\begin{gather*}
+    E[(\hat{\beta}(0)-\beta)^TX^TX(\hat{\beta}(0)-\beta) \ | X]-E[(\hat{\beta}(\lambda)-\beta)^TX^TX(\hat{\beta}(\lambda)-\beta) \ | X] \\
+    =E[(\hat{\beta}(0) - \hat{\beta}(\lambda))'X'X(\hat{\beta}(\lambda)+\hat{\beta}(0)-2\beta)| X ]
+\end{gather*}
+
+%Ho appena visto che su Canvas in discussion ci sono dei suggerimenti, si dovrebbe riuscire con quelli 
+Then I've tried different ways to simplify but couldn't get the answer 
+\[ \lambda Tr{W_\lambda^TW_\lambda[2\sigma^2(X^TX)+\lambda(\sigma^2I_p-\beta\beta^TX^TX)]}  \]
+
+## d
+
+In order to show that for a given X the ridge estimator dominates the OLS one for PMSE, we want to show that the above difference is indeed positive when the matrix $\sigma^2I_p-\beta\beta^TX^TX$ is positive definite. For the trace to be always positive, we need all the eigenvalues of the matrix to be positive. This is the case when the whole matrix is positive definite. Hence, in what follows we need to show that when $\sigma^2I_p-\beta\beta^TX^TX$ is positive definite, then consequently $W_\lambda^TW_\lambda[2\sigma^2(X^TX)+\lambda(\sigma^2I_p-\beta\beta^TX^TX)]$ is positive definite (having $\lambda >0$). 
+\newline
+We first recall some properties of definiteness of matrices: 
+- If A and B are positive definite, then the sum $A + B$ is also positive definite.
+- If A and B are positive definite, then the products $ABA$ and $BAB$ are also positive definite. If $AB = BA$, then $AB$ is also positive definite.
+
+From the former we get that $M=2\sigma^2(X^TX)+\lambda(\sigma^2I_p-\beta\beta^TX^TX)$ is positive definite, since it is straightforward that the quadratic matrix multiplied by a positive constant will be positive definite. For the same reason we also know that $N=W_\lambda^TW_{\lambda}$ is positive definite. 
+
+Now we need to show that $MN=NM$
+
+Non so se sia meglio questo approccio o prendere un vettore z \neq 0 e far vedere che z'MNz è sempre >0 
+
+
+
+
+
+
+
+
