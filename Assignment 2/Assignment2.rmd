@@ -264,14 +264,7 @@ Useful links https://arxiv.org/pdf/1509.09169.pdf https://www.statlect.com/funda
 
 
 ## a
-\documentclass[a4paper, 12pt, english]{article}
-\linespread{1}
-\usepackage{babel} \usepackage{amsmath, amssymb, amsfonts}
-\usepackage{graphicx}
-\title{Advanced Microeconomics - Problem set 3}
-\author{Giacomo Marcolin, Federico Mattei}
 
-\begin{document}
 Proof of BIAS:
 $$
 BIAS=E[\hat{\beta}(\lambda)|X]-\beta $$
