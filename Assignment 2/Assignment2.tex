@@ -99,6 +99,38 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
 
 \title{Data Science Methods - Assignment 2}
 \author{M. Alberti, s.n. 2020162 \and N. Ceschin, s.n. 344510}
@@ -108,7 +140,7 @@
 \maketitle
 
 \hypertarget{question-1}{%
-\subsection{Question 1}\label{question-1}}
+\section{Question 1}\label{question-1}}
 
 First we upload all relevant libraries:
 
@@ -122,6 +154,9 @@ First we upload all relevant libraries:
 \KeywordTok{library}\NormalTok{(Matrix)}
 \KeywordTok{library}\NormalTok{(pROC)}
 \KeywordTok{library}\NormalTok{(xtable)}
+\KeywordTok{library}\NormalTok{(knitr)}
+\KeywordTok{library}\NormalTok{(kableExtra)}
+\KeywordTok{library}\NormalTok{(dplyr)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -164,34 +199,10 @@ Data preparation
 
 \CommentTok{# FULL SET: omit observations with missing values}
 \NormalTok{full_om <-}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(full)}
-
-
-\CommentTok{#DATA for logit model}
-\CommentTok{## interaction-terms for logit model}
-\NormalTok{ia_pub<-data}\OperatorTok{$}\NormalTok{pdebt_gap}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{ltrate}
-\NormalTok{data}\OperatorTok{$}\NormalTok{ia_pub<-ia_pub}
-
-\NormalTok{ia_prb<-data}\OperatorTok{$}\NormalTok{loans1_y_gap}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{ltrate}
-\NormalTok{data}\OperatorTok{$}\NormalTok{ia_prb<-ia_prb}
-
-\NormalTok{ia_jb<-data}\OperatorTok{$}\NormalTok{loans1_y_gap}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{ltrate}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{pdebt_gap}
-\NormalTok{data}\OperatorTok{$}\NormalTok{ia_jb<-ia_jb}
-
-\NormalTok{ia_lygr<-data}\OperatorTok{$}\NormalTok{loans1_y}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{gr_rgdp}
-\NormalTok{data}\OperatorTok{$}\NormalTok{ia_lygr<-ia_lygr}
-
-\NormalTok{ia_pygr<-data}\OperatorTok{$}\NormalTok{pdebt}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{gr_rgdp}
-\NormalTok{data}\OperatorTok{$}\NormalTok{ia_pygr<-ia_pygr}
-
-\NormalTok{ia_lyer<-data}\OperatorTok{$}\NormalTok{loans1_y_gap}\OperatorTok{*}\NormalTok{data}\OperatorTok{$}\NormalTok{er_gap}
-\NormalTok{data}\OperatorTok{$}\NormalTok{ia_lyer<-ia_lyer}
-
-\CommentTok{## country factor}
-\NormalTok{data}\OperatorTok{$}\NormalTok{country.factor<-}\KeywordTok{as.factor}\NormalTok{(data}\OperatorTok{$}\NormalTok{ccode)}
-
-\CommentTok{#throw out vars not used}
-\NormalTok{drops.logit <-}\StringTok{ }\KeywordTok{names}\NormalTok{(data) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"year"}\NormalTok{) }\CommentTok{# true-false indicator: true at the names in vector}
-\NormalTok{full.logit <-}\StringTok{ }\NormalTok{data[}\OperatorTok{!}\NormalTok{drops] }\CommentTok{# drops those variables which have true indication in "drops"}
+\NormalTok{misc.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"b1"}\NormalTok{,}\StringTok{"b3"}\NormalTok{,}\StringTok{"rec1"}\NormalTok{,}\StringTok{"rec2"}\NormalTok{,}\StringTok{"rec3"}\NormalTok{)}
+\NormalTok{location <-}\StringTok{ }\KeywordTok{names}\NormalTok{(full_om) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(misc.list) }
+\NormalTok{name.indep <-}\StringTok{ }\KeywordTok{names}\NormalTok{(full_om[}\OperatorTok{!}\NormalTok{location])}
+\NormalTok{full_om <-}\StringTok{ }\NormalTok{full_om[name.indep]}
 \end{Highlighting}
 \end{Shaded}
 
@@ -199,55 +210,27 @@ Preparation before running the estimation:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# variables}
-\NormalTok{var.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{( }\StringTok{"loans1_y_gap"}\NormalTok{, }\StringTok{"pdebt_gap"}\NormalTok{, }\StringTok{"narrowm_y_gap"}\NormalTok{,  }\StringTok{"rltrate"}\NormalTok{, }\StringTok{"gr_rgdp"}\NormalTok{, }\StringTok{"gr_cpi"}\NormalTok{,  }\StringTok{"er_gap"}\NormalTok{, }\StringTok{"loans1_y"}\NormalTok{, }\StringTok{"pdebt"}\NormalTok{, }\StringTok{"ltrate"}\NormalTok{)}
 \CommentTok{# model list}
 \NormalTok{model.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Ridge regression"}\NormalTok{, }\StringTok{"Lasso Regression"}\NormalTok{)}
-
-\CommentTok{# variables (logit)}
-\NormalTok{var.logit <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"loans1_y_gap"}\NormalTok{, }\StringTok{"pdebt_gap"}\NormalTok{, }\StringTok{"narrowm_y_gap"}\NormalTok{,  }\StringTok{"rltrate"}\NormalTok{, }\StringTok{"gr_rgdp"}\NormalTok{, }\StringTok{"gr_cpi"}\NormalTok{,  }\StringTok{"er_gap"}\NormalTok{)}
-\CommentTok{# interaction terms (logit)}
-\NormalTok{ia.logit <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"ia_pub"}\NormalTok{, }\StringTok{"ia_prb"}\NormalTok{, }\StringTok{"ia_jb"}\NormalTok{, }\StringTok{"ia_lygr"}\NormalTok{, }\StringTok{"ia_pygr"}\NormalTok{, }\StringTok{"ia_lyer"}\NormalTok{)}
-
-
-\CommentTok{# parameter list}
-\NormalTok{param.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"B"}\NormalTok{, }\StringTok{"$ J_\{try\} $"}\NormalTok{, }\StringTok{"$ J $"}\NormalTok{, }\StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{# of crises"}\NormalTok{)}
-\NormalTok{out.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{textbf\{Model\}"}\NormalTok{, }\StringTok{"AUC"}\NormalTok{, }\StringTok{"95}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{%-CI"}\NormalTok{, }\StringTok{"N"}\NormalTok{)}
-
-\CommentTok{# miscellaneous non-independent}
-\NormalTok{misc.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"b2"}\NormalTok{,}\StringTok{"b1"}\NormalTok{,}\StringTok{"b3"}\NormalTok{,}\StringTok{"rec1"}\NormalTok{,}\StringTok{"rec2"}\NormalTok{,}\StringTok{"rec3"}\NormalTok{)}
-
-\CommentTok{# table matrices}
-\NormalTok{out <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\DecValTok{5}\NormalTok{)}
+\NormalTok{out.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"Model"}\NormalTok{, }\StringTok{"AUC"}\NormalTok{, }\StringTok{"95%-CI"}\NormalTok{, }\StringTok{"N"}\NormalTok{)}
 
 \CommentTok{# Bootstrap runs}
-\NormalTok{runs <-}\StringTok{ }\DecValTok{100}
+\NormalTok{runs <-}\StringTok{ }\DecValTok{2}
+
+\CommentTok{#values of the tuning paramter}
+    
+\NormalTok{grid =}\StringTok{ }\DecValTok{10} \OperatorTok{^}\StringTok{ }\KeywordTok{seq}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{-3}\NormalTok{, }\DataTypeTok{length=}\DecValTok{100}\NormalTok{)}
 
 \CommentTok{# confidence intervals}
 \NormalTok{n.ci <-}\StringTok{ }\DecValTok{3}
 \NormalTok{ci <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\FloatTok{0.99}\NormalTok{, }\FloatTok{0.95}\NormalTok{, }\FloatTok{0.9}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
 
-Setting up the logit framework:
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{#LOGIT}
-
+\CommentTok{#objects to stroe estimation results}
 \NormalTok{aucs <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\NormalTok{runs)}
 \NormalTok{ci95_lo <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\NormalTok{runs)}
 \NormalTok{ci95_up <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\NormalTok{runs)}
-
 \NormalTok{N <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\NormalTok{runs)}
-    
-
-\CommentTok{# get formula}
-\NormalTok{location <-}\StringTok{ }\KeywordTok{names}\NormalTok{(full.logit) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(var.logit, ia.logit,}\StringTok{"country.factor"}\NormalTok{) }\CommentTok{# get location of vars}
-\NormalTok{name <-}\StringTok{ }\KeywordTok{names}\NormalTok{(full.logit[location]) }\CommentTok{# get names}
-\NormalTok{indep <-}\StringTok{ }\KeywordTok{paste}\NormalTok{(name, }\DataTypeTok{collapse=}\StringTok{"+"}\NormalTok{) }\CommentTok{# indep. variables}
-\NormalTok{dep <-}\StringTok{ }\KeywordTok{paste}\NormalTok{(}\StringTok{"b2~"}\NormalTok{) }\CommentTok{# dep. variable}
-\NormalTok{fmla <-}\StringTok{ }\KeywordTok{as.formula}\NormalTok{(}\KeywordTok{paste}\NormalTok{(dep, indep)) }\CommentTok{# get formula}
+\NormalTok{out <-}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DataTypeTok{nrow=}\DecValTok{2}\NormalTok{, }\DataTypeTok{ncol=}\DecValTok{5}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -256,39 +239,28 @@ Ridge regression:
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{#drop alternative independent variables}
-\NormalTok{misc.list <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"b1"}\NormalTok{,}\StringTok{"b3"}\NormalTok{,}\StringTok{"rec1"}\NormalTok{,}\StringTok{"rec2"}\NormalTok{,}\StringTok{"rec3"}\NormalTok{)}
-\NormalTok{location <-}\StringTok{ }\KeywordTok{names}\NormalTok{(full_om) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(misc.list) }
-\NormalTok{name.indep <-}\StringTok{ }\KeywordTok{names}\NormalTok{(full_om[}\OperatorTok{!}\NormalTok{location])}
-\NormalTok{indep <-}\StringTok{ }\NormalTok{full_om[name.indep]}
-\NormalTok{dep <-}\StringTok{ }\KeywordTok{factor}\NormalTok{(full_om[,}\StringTok{"b2"}\NormalTok{]}\OperatorTok{>}\DecValTok{0}\NormalTok{)}
-
-\NormalTok{grid =}\StringTok{ }\DecValTok{10} \OperatorTok{^}\StringTok{ }\KeywordTok{seq}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{-3}\NormalTok{, }\DataTypeTok{length=}\DecValTok{100}\NormalTok{)}
-
 \ControlFlowTok{for}\NormalTok{(j }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{runs) \{}
     
     \CommentTok{# training, test sample}
     \KeywordTok{set.seed}\NormalTok{(j)}
-\NormalTok{    indexes =}\StringTok{ }\KeywordTok{sample}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(full.logit), }\DataTypeTok{size=}\FloatTok{0.632}\OperatorTok{*}\KeywordTok{nrow}\NormalTok{(full.logit), }\DataTypeTok{replace=}\NormalTok{F)}
-\NormalTok{    test =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(full.logit[}\OperatorTok{-}\NormalTok{indexes,])}
-\NormalTok{    train =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(full.logit[indexes,])}
+\NormalTok{    indexes =}\StringTok{ }\KeywordTok{sample}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(full_om), }\DataTypeTok{size=}\FloatTok{0.632}\OperatorTok{*}\KeywordTok{nrow}\NormalTok{(full_om), }\DataTypeTok{replace=}\NormalTok{F)}
+\NormalTok{    test =}\StringTok{ }\NormalTok{full_om[}\OperatorTok{-}\NormalTok{indexes,]}
+\NormalTok{    train =}\StringTok{ }\NormalTok{full_om[indexes,]}
     
     \CommentTok{# Ridge Regression}
-    
-\NormalTok{    train.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(fmla, }\DataTypeTok{data=}\NormalTok{train)}
-\NormalTok{  test.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(fmla, }\DataTypeTok{data=}\NormalTok{test)}
-\NormalTok{  mod.ridge =}\StringTok{ }\KeywordTok{cv.glmnet}\NormalTok{(train.mat, train[, }\StringTok{"b2"}\NormalTok{], }\DataTypeTok{alpha=}\DecValTok{0}\NormalTok{, }\DataTypeTok{lambda=}\NormalTok{grid, }\DataTypeTok{family=}\StringTok{"binomial"}\NormalTok{, }\DataTypeTok{thresh=}\FloatTok{1e-12}\NormalTok{) }
+\NormalTok{    train.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(b2}\OperatorTok{~}\NormalTok{., }\DataTypeTok{data=}\NormalTok{train) }
+\NormalTok{  test.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(b2}\OperatorTok{~}\NormalTok{., }\DataTypeTok{data=}\NormalTok{test)}
+\NormalTok{  mod.ridge =}\StringTok{ }\KeywordTok{cv.glmnet}\NormalTok{(train.mat, train[, }\StringTok{"b2"}\NormalTok{], }\DataTypeTok{alpha=}\DecValTok{0}\NormalTok{, }\DataTypeTok{lambda=}\NormalTok{grid, }\DataTypeTok{family=}\StringTok{"binomial"}\NormalTok{, }\DataTypeTok{thresh=}\FloatTok{1e-12}\NormalTok{)}
 \NormalTok{  lambda.best =}\StringTok{ }\NormalTok{mod.ridge}\OperatorTok{$}\NormalTok{lambda.min }
   
   \CommentTok{# OOS-analysis}
-\NormalTok{  pred =}\StringTok{ }\KeywordTok{predict}\NormalTok{(mod.ridge,test.mat, }\DataTypeTok{s=}\NormalTok{lambda.best, }\DataTypeTok{type=}\StringTok{"response"}\NormalTok{) }\CommentTok{# predicted outcome}
+\NormalTok{  ridge.prob =}\StringTok{ }\KeywordTok{predict}\NormalTok{(mod.ridge,}\DataTypeTok{newx=}\NormalTok{test.mat, }\DataTypeTok{s=}\NormalTok{lambda.best, }\DataTypeTok{type=}\StringTok{"response"}\NormalTok{) }\CommentTok{# predicted outcome}
 
-\NormalTok{  N[}\DecValTok{1}\NormalTok{,j] <-}\StringTok{ }\NormalTok{mod.ridge[[}\StringTok{"glmnet.fit"}\NormalTok{]][[}\StringTok{"nobs"}\NormalTok{]]}
-  
-\NormalTok{  location <-}\StringTok{ }\KeywordTok{names}\NormalTok{(test) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"b2"}\NormalTok{)}
-\NormalTok{    name <-}\StringTok{ }\KeywordTok{names}\NormalTok{(test[location]) }\CommentTok{# get names}
-\NormalTok{    true<-test[,name] }\CommentTok{# real outcome}
+  \CommentTok{#N[1,j] <- mod.ridge[["glmnet.fit"]][["nobs"]] #if we really reproduce Table 3, we should put just number of obs}
 
-\NormalTok{    r<-}\KeywordTok{roc}\NormalTok{(true,}\KeywordTok{as.numeric}\NormalTok{(pred),}\DataTypeTok{ci=}\NormalTok{T) }\CommentTok{# ROC analysis}
+\NormalTok{    true<-test[,}\StringTok{"b2"}\NormalTok{] }\CommentTok{# real outcome}
+
+\NormalTok{    r<-}\KeywordTok{roc}\NormalTok{(true,}\KeywordTok{as.numeric}\NormalTok{(ridge.prob),}\DataTypeTok{ci=}\NormalTok{T) }\CommentTok{# ROC analysis}
     
 \NormalTok{    aucs[}\DecValTok{1}\NormalTok{,j] <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(r}\OperatorTok{$}\NormalTok{auc)}
         
@@ -297,7 +269,7 @@ Ridge regression:
 
 \NormalTok{\}}
 
-\NormalTok{n_ridge <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(N[}\DecValTok{1}\NormalTok{, ])))) }\CommentTok{# update output table matrix}
+\NormalTok{n_ridge <-}\StringTok{ }\KeywordTok{trunc}\NormalTok{(}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(N[}\DecValTok{1}\NormalTok{, ])))) }\CommentTok{# update output table matrix}
 
 \NormalTok{auc_ridge<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(aucs[}\DecValTok{1}\NormalTok{, ])))}
 \NormalTok{ci95_lo_ridge<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(ci95_lo[}\DecValTok{1}\NormalTok{, ])))}
@@ -307,7 +279,7 @@ Ridge regression:
 \NormalTok{out[}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{]<-auc_ridge}
 \NormalTok{out[}\DecValTok{1}\NormalTok{,}\DecValTok{3}\NormalTok{]<-ci95_lo_ridge}
 \NormalTok{out[}\DecValTok{1}\NormalTok{,}\DecValTok{4}\NormalTok{]<-ci95_up_ridge}
-\NormalTok{out[}\DecValTok{1}\NormalTok{,}\DecValTok{5}\NormalTok{]<-n_ridge}
+\NormalTok{out[}\DecValTok{1}\NormalTok{,}\DecValTok{5}\NormalTok{]<-}\KeywordTok{dim}\NormalTok{(full_om)[}\DecValTok{1}\NormalTok{]}
 \end{Highlighting}
 \end{Shaded}
 
@@ -318,28 +290,25 @@ Lasso Regression
 \ControlFlowTok{for}\NormalTok{(j }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{runs) \{}
     
     \CommentTok{# training, test sample}
-    \KeywordTok{set.seed}\NormalTok{(j)}
-\NormalTok{    indexes =}\StringTok{ }\KeywordTok{sample}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(full.logit), }\DataTypeTok{size=}\FloatTok{0.632}\OperatorTok{*}\KeywordTok{nrow}\NormalTok{(full.logit), }\DataTypeTok{replace=}\NormalTok{F)}
-\NormalTok{    test =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(full.logit[}\OperatorTok{-}\NormalTok{indexes,])}
-\NormalTok{    train =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(full.logit[indexes,])}
+    \KeywordTok{set.seed}\NormalTok{(j}\OperatorTok{+}\DecValTok{100}\NormalTok{)}
+\NormalTok{    indexes =}\StringTok{ }\KeywordTok{sample}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\KeywordTok{nrow}\NormalTok{(full_om), }\DataTypeTok{size=}\FloatTok{0.632}\OperatorTok{*}\KeywordTok{nrow}\NormalTok{(full_om), }\DataTypeTok{replace=}\NormalTok{F)}
+\NormalTok{    test =}\StringTok{ }\NormalTok{full_om[}\OperatorTok{-}\NormalTok{indexes,]}
+\NormalTok{    train =}\StringTok{ }\NormalTok{full_om[indexes,]}
     
-    \CommentTok{# Ridge Regression}
-    
-\NormalTok{    train.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(fmla, }\DataTypeTok{data=}\NormalTok{train)}
-\NormalTok{  test.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(fmla, }\DataTypeTok{data=}\NormalTok{test)}
-\NormalTok{  mod.lasso =}\StringTok{ }\KeywordTok{cv.glmnet}\NormalTok{(train.mat, train[, }\StringTok{"b2"}\NormalTok{], }\DataTypeTok{alpha=}\DecValTok{1}\NormalTok{, }\DataTypeTok{lambda=}\NormalTok{grid, }\DataTypeTok{family=}\StringTok{"binomial"}\NormalTok{, }\DataTypeTok{thresh=}\FloatTok{1e-12}\NormalTok{) }
+  \CommentTok{#Lasso regression}
+\NormalTok{    train.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(b2}\OperatorTok{~}\NormalTok{., }\DataTypeTok{data=}\NormalTok{train) }
+\NormalTok{  test.mat =}\StringTok{ }\KeywordTok{model.matrix}\NormalTok{(b2}\OperatorTok{~}\NormalTok{., }\DataTypeTok{data=}\NormalTok{test)}
+\NormalTok{  mod.lasso =}\StringTok{ }\KeywordTok{cv.glmnet}\NormalTok{(train.mat, train[, }\StringTok{"b2"}\NormalTok{], }\DataTypeTok{alpha=}\DecValTok{1}\NormalTok{, }\DataTypeTok{lambda=}\NormalTok{grid, }\DataTypeTok{family=}\StringTok{"binomial"}\NormalTok{, }\DataTypeTok{thresh=}\FloatTok{1e-12}\NormalTok{)}
 \NormalTok{  lambda.best =}\StringTok{ }\NormalTok{mod.lasso}\OperatorTok{$}\NormalTok{lambda.min }
   
   \CommentTok{# OOS-analysis}
-\NormalTok{  pred =}\StringTok{ }\KeywordTok{predict}\NormalTok{(mod.lasso,test.mat, }\DataTypeTok{s=}\NormalTok{lambda.best, }\DataTypeTok{type=}\StringTok{"response"}\NormalTok{) }\CommentTok{# predicted outcome}
+\NormalTok{  lasso.prob =}\StringTok{ }\KeywordTok{predict}\NormalTok{(mod.lasso,}\DataTypeTok{newx=}\NormalTok{test.mat, }\DataTypeTok{s=}\NormalTok{lambda.best, }\DataTypeTok{type=}\StringTok{"response"}\NormalTok{) }\CommentTok{# predicted outcome}
 
-\NormalTok{  N[}\DecValTok{2}\NormalTok{,j] <-}\StringTok{ }\NormalTok{mod.lasso[[}\StringTok{"glmnet.fit"}\NormalTok{]][[}\StringTok{"nobs"}\NormalTok{]]}
-  
-\NormalTok{  location <-}\StringTok{ }\KeywordTok{names}\NormalTok{(test) }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"b2"}\NormalTok{)}
-\NormalTok{    name <-}\StringTok{ }\KeywordTok{names}\NormalTok{(test[location]) }\CommentTok{# get names}
-\NormalTok{    true<-test[,name] }\CommentTok{# real outcome}
+  \CommentTok{#N[2,j] <- mod.lasso[["glmnet.fit"]][["nobs"]]}
 
-\NormalTok{    r<-}\KeywordTok{roc}\NormalTok{(true,pred,}\DataTypeTok{ci=}\NormalTok{T) }\CommentTok{# ROC analysis}
+\NormalTok{    true<-test[,}\StringTok{"b2"}\NormalTok{] }\CommentTok{# real outcome}
+
+\NormalTok{    r<-}\KeywordTok{roc}\NormalTok{(true,lasso.prob,}\DataTypeTok{ci=}\NormalTok{T) }\CommentTok{# ROC analysis}
     
 \NormalTok{    aucs[}\DecValTok{2}\NormalTok{,j] <-}\StringTok{ }\KeywordTok{as.numeric}\NormalTok{(r}\OperatorTok{$}\NormalTok{auc)}
         
@@ -348,8 +317,7 @@ Lasso Regression
 
 \NormalTok{\}}
 
-\NormalTok{n_lasso <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(N[}\DecValTok{2}\NormalTok{, ])))) }\CommentTok{# update output table matrix}
-
+\NormalTok{n_lasso <-}\StringTok{ }\KeywordTok{trunc}\NormalTok{(}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(N[}\DecValTok{2}\NormalTok{, ])))) }
 \NormalTok{auc_lasso<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(aucs[}\DecValTok{2}\NormalTok{, ])))}
 \NormalTok{ci95_lo_lasso<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(ci95_lo[}\DecValTok{2}\NormalTok{, ])))}
 \NormalTok{ci95_up_lasso<-}\KeywordTok{as.numeric}\NormalTok{(}\KeywordTok{colMeans}\NormalTok{(}\KeywordTok{as.matrix}\NormalTok{(ci95_up[}\DecValTok{2}\NormalTok{, ])))}
@@ -358,7 +326,7 @@ Lasso Regression
 \NormalTok{out[}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{]<-auc_lasso}
 \NormalTok{out[}\DecValTok{2}\NormalTok{,}\DecValTok{3}\NormalTok{]<-ci95_lo_lasso}
 \NormalTok{out[}\DecValTok{2}\NormalTok{,}\DecValTok{4}\NormalTok{]<-ci95_up_lasso}
-\NormalTok{out[}\DecValTok{2}\NormalTok{,}\DecValTok{5}\NormalTok{]<-n_lasso}
+\NormalTok{out[}\DecValTok{2}\NormalTok{,}\DecValTok{5}\NormalTok{]<-}\KeywordTok{dim}\NormalTok{(full_om)[}\DecValTok{1}\NormalTok{]}
 \end{Highlighting}
 \end{Shaded}
 
@@ -379,39 +347,243 @@ Output table:
 
 \NormalTok{out3 <-}\StringTok{ }\NormalTok{out2[,}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{,}\DecValTok{5}\NormalTok{)] }\CommentTok{# leave out .9, .99 lower-ci columns}
 \NormalTok{out4 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(out3,cis)}
-\NormalTok{out5 <-}\StringTok{ }\NormalTok{out4[,}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{,}\DecValTok{4}\NormalTok{,}\DecValTok{3}\NormalTok{)] }
-\NormalTok{outF<-}\KeywordTok{rbind}\NormalTok{(out.list,out5) }\CommentTok{#get model headers}
+\NormalTok{outF <-}\StringTok{ }\NormalTok{out4[,}\KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{,}\DecValTok{4}\NormalTok{,}\DecValTok{3}\NormalTok{)] }
+\KeywordTok{colnames}\NormalTok{(outF)<-out.list}
+\NormalTok{outF<-}\KeywordTok{as.data.frame}\NormalTok{(outF)}
 
-\CommentTok{# get rid of row and columnnames}
-\NormalTok{x <-}\StringTok{ }\KeywordTok{data.frame}\NormalTok{(outF)}
-\NormalTok{outF<-}\KeywordTok{as.matrix}\NormalTok{(x)}
-\KeywordTok{rownames}\NormalTok{(outF) <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\StringTok{""}\NormalTok{, }\KeywordTok{nrow}\NormalTok{(outF))}
-\KeywordTok{colnames}\NormalTok{(outF) <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\StringTok{""}\NormalTok{, }\KeywordTok{ncol}\NormalTok{(outF))}
-
-\NormalTok{mat3<-}\KeywordTok{xtable}\NormalTok{(outF, }\DataTypeTok{align=}\StringTok{"ccccc"}\NormalTok{, }\DataTypeTok{caption=}\StringTok{"Comparison of Lasso and Ridge regression"}\NormalTok{, }\DataTypeTok{label=}\StringTok{"tab:output"}\NormalTok{) }
-
-\KeywordTok{print}\NormalTok{(mat3, }\DataTypeTok{type=}\StringTok{"latex"}\NormalTok{, }\DataTypeTok{caption.placement=}\StringTok{"top"}\NormalTok{, }\DataTypeTok{hline.after=}\KeywordTok{c}\NormalTok{(}\OperatorTok{-}\DecValTok{1}\NormalTok{,}\KeywordTok{nrow}\NormalTok{(mat3)), }\DataTypeTok{sanitize.text.function =} \ControlFlowTok{function}\NormalTok{(x)\{x\}, }\DataTypeTok{replace=}\NormalTok{T, }\DataTypeTok{floating=}\NormalTok{F, }\DataTypeTok{booktabs=}\NormalTok{T, }\DataTypeTok{include.colnames=}\NormalTok{F, }\DataTypeTok{include.rownames=}\NormalTok{F)}
+\KeywordTok{kable}\NormalTok{(outF, }\StringTok{"latex"}\NormalTok{, }\DataTypeTok{booktabs =}\NormalTok{ T,}\DataTypeTok{row.names =} \OtherTok{FALSE}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{kable_styling}\NormalTok{(}\DataTypeTok{latex_options =} \StringTok{"striped"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-## % latex table generated in R 3.6.3 by xtable 1.8-4 package
-## % Tue Mar 24 18:07:03 2020
-## \begin{tabular}{cccc}
-##   \toprule
-##  \textbf{Model} & AUC & 95\%-CI & N \\ 
-##   Ridge regression & 0.65 & [0.57,0.73] & 1100 \\ 
-##   Lasso Regression & 0.64 & [0.56,0.72] & 1100 \\ 
-##    \bottomrule
-## \end{tabular}
-\end{verbatim}
-
-\begin{tabular}{cccc}
-  \toprule
- \textbf{Model} & AUC & 95\%-CI & N \\ 
-  Ridge regression & 0.65 & [0.57,0.73] & 1099.71 \\ 
-  Lasso Regression & 0.64 & [0.56,0.72] & 1099.71 \\ 
-   \bottomrule
+\begin{table}[H]
+\centering
+\begin{tabular}{llll}
+\toprule
+Model & AUC & 95\%-CI & N\\
+\midrule
+\rowcolor{gray!6}  Ridge regression & 0.78 & [0.72,0.85] & 1742\\
+Lasso Regression & 0.76 & [0.69,0.84] & 1742\\
+\bottomrule
 \end{tabular}
+\end{table}
+
+The first observation we can make is that both model performs very
+similarly. Ridge does slightly better in terms of the AUC, our reference
+metric of misclassification. This result is however striking. Indeed,
+the number of regressors which Lasso shrinks to zero is extremely high
+(44 out of 76). In such cases, where most of the regressors have no
+predicting power, lasso should perform relatively better
+theoretically.\\
+When it comes to compare our estimations techniques with those of Table
+III in the paper in the many predictors case, we notice that they stand
+in the middle between the Single tree and Bagging/Random forest results.
+With the regard to Single Tree, we know that its relatively bad
+performance is due to the high variance component in the MSE. This is
+proved by the fact that in Bagging and Random Forest AUC jumps up
+substantially. The performance of these latter two estimations
+techniques is considerably superior to the multivariate logit benchmark.
+Even if the set of predictors used in the logit and the the other
+``ensamble'' methods is different, this suggests that the relation
+between the dependent and the independent variable is better
+approximated by a non-paramteric, more flexible technique as the
+tree-based ones rather than a specific functional form, as a logistic
+function. We could read our results in light of this observation. Even
+if Ridge and Lasso are much more ``flexible'' with respect to plain
+logit as they can select (or give more weight) to most important (or
+``true'') predictors and at the same time avoid unstable estimates, they
+still rely on a logistic functional form, which proved to fit poorly the
+data under analysis.
+
+\hypertarget{question-2}{%
+\section{Question 2}\label{question-2}}
+
+\hypertarget{a}{%
+\subsection{a)}\label{a}}
+
+Plain lasso optimization problem
+\[  \hat{\bm \beta_{L}} =\arg\min_{\bm \beta}\left[ \Vert\bm y-\sum_{j=1}^{p} \bm x_j \beta_j \Vert^2 + \lambda\sum_{j=1}^{p}|\beta_j|\right]\]
+Adaptive lasso optimization problem
+\[  \hat{\bm \beta_{AL}} =\arg\min_{\bm \beta}\left[ \Vert\bm y-\sum_{j=1}^{p} \bm x_j \beta_j \Vert^2 + \lambda\sum_{j=1}^{p}|\beta_j|w_j\right]\]
+with \(w_i=\frac{1}{|\hat\beta_P|^{\gamma}}\),
+\(\gamma\in\{1,2\}, \bm\beta_P\) pre-estimator. Plain lasso is a less
+parsimonious model, it is suggested when we are interested in
+out-of-sample performance of our model (prediction).\\
+On the contrary, adaptive lasso is recommended when we are interested in
+the in-sample properties of the estimated parameters. The weight \(w_j\)
+is inversely proportional to the magnitude of the coefficients in the
+preestimation: higher coefficients get penalized less in adaptive lasso.
+Therefore, coefficients that are smaller in the pre-estimation are
+potentially shrunk to zero. Adaptive lasso is therefore more
+parsimonious than plain lasso. Coefficients that would be close to zero
+in plain lasso are probably biased and in adaptive lasso they get
+penalized further and shrunk to zero. Under mild conditions, this method
+can select the true underlying model.\\
+The tuning parameters are usually selected from the cross-validated MSE.
+In plain lasso, there is one tuning paramter, \(\lambda\), while in the
+adaptive lasso there are two, \(\gamma\) and \(\lambda\), so the
+cross-validation will be two-dimensional. Even if it does not have sound
+statistical foundations, sometimes it is suggested to pick not the
+\(\lambda\) that minimizes the cross-validated MSE, but the one that is
+one standard error above it.
+
+\hypertarget{b}{%
+\subsection{b)}\label{b}}
+
+The most intuitive reason to apply other estimation techniques after
+having found the true model by adaptive lasso (under some regularity
+conditions) is that shrinkage estimators are inherently biased. The
+penalty in the objective function (\(\lambda\) above) enters the
+estimator formula, producing a bias. This bias tends to be high
+especially in finite samples. Therefore, it is reasonably better to
+apply adaptive lasso to find the covariates which characterize the true
+model and then apply an unbiased estimation technique on this restricted
+set of covariates.\\
+Antoher possible reason we can think about could be that in some
+estimation techniques (as OLS) the higher the number of regressors, the
+higher the variance of the final estimator. Therefore, this would end up
+in higher standard errors and this could eventually inflate p-values.
+Thus, running estimation on a smaller set of covariates would yield a
+more precise estimators, with lower standard errors. However, the
+significance of final coefficients would potentially not be a problem,
+as we assume that adaptive lasso already selects just the covariates
+different from 0.
+
+\hypertarget{question-3}{%
+\section{Question 3}\label{question-3}}
+
+\hypertarget{a-1}{%
+\subsection{a)}\label{a-1}}
+
+Proof of BIAS:
+
+\[BIAS=E[\hat{\beta}(\lambda)|X]-\beta \] \begin{align*}
+E[\hat{\beta}(\lambda)|X]&=E[W(\lambda)X^T y|X]=E[W(\lambda)X^T (X\beta+\epsilon)|X] \\
+\\
+&= W(\lambda)X^T X\beta+W(\lambda)X^T \underbrace{E(\epsilon|X)}_{=0} = W(\lambda)X^T X\beta \\
+&=(X^TX+\lambda I_p)^{-1}(X^TX+\lambda I_p-\lambda I_p)\beta=\\
+&=\left[I_p-\lambda(X^TX+\lambda I_p)^{-1}\right]\beta\\
+&=\beta-\lambda(X^TX+\lambda I_p)^{-1}\beta\\
+&=\beta-\lambda W(\lambda)\beta
+\end{align*} Therefore, the bias is equal to:
+
+\begin{equation*}
+BIAS=E[\hat{\beta}(\lambda)|X]-\beta=\beta-\lambda W(\lambda)\beta-\beta=-\lambda W(\lambda)\beta
+\end{equation*}
+
+\hypertarget{b-1}{%
+\subsection{b)}\label{b-1}}
+
+Proof of variance: \begin{gather*}
+Var[\hat{\beta}(\lambda)|X]=Var[W(\lambda)X^T Y|X]=Var[W(\lambda)X^T (X\beta+\epsilon)|X] \\
+\\
+=Var[(X^TX+\lambda I_p)^{-1}X^T (X\beta+\epsilon)|X]
+\end{gather*}
+
+Noticing that the first term is constant given \(X\), \(\lambda\) and
+\(\beta\) and recalling that \(Var(a+X)=Var(X)\) with \(a\) being a
+constant; we can simplify as follows:
+
+\begin{gather*}
+Var[(X^TX+\lambda I_p)^{-1}X^T (X\beta+\epsilon)|X]=Var[W(\lambda)X^T\epsilon|X]=W(\lambda)X^TVar[\epsilon|X]XW(\lambda)^T \\
+=W(\lambda)X^T\sigma^2I_T X W(\lambda)^T=\sigma^2W(\lambda)(X^TX) W(\lambda)^T
+\end{gather*}
+
+We then can write:
+
+\begin{gather*}
+Var[\hat{\beta}(0)|X]-Var[\hat{\beta}(\lambda)|X]=\sigma^2[(X^TX)^{-1}-W(\lambda)(X^TX) W(\lambda)^T] \\
+= \sigma^2 W(\lambda)[W(\lambda)^{-1}(X^TX)^{-1}(W(\lambda)^T)^{-1}-(X^TX)]W(\lambda)^T \\
+= \sigma^2 W(\lambda)[[X^TX+\lambda I_p](X^TX)^{-1}[X^TX+\lambda I_p]^T-(X^TX)]W(\lambda)^T \\
+\implies Var[\hat{\beta}(0)|X]-Var[\hat{\beta}(\lambda)|X]=\sigma^2W_{\lambda}[2\lambda I_p+\lambda^2(X^T X)^{-1}]W_{\lambda}
+\end{gather*}
+
+It is easy to see that for \(\lambda>0\), this matrix is positive
+definite because for any \(\nu \neq 0\), we have:
+
+\[ z=W_\lambda \nu \neq 0\]
+
+and
+
+\begin{gather*}
+\nu^T[Var[\hat{\beta}(0)|X]-Var[\hat{\beta}(\lambda)|X]]\nu=\sigma^2 z^T[2\lambda I_p+\lambda^2(X^TX)^{-1}]z \\
+=\sigma^2 \lambda z^Tz+\sigma^2\lambda^2z^T(X^TX)^{-1}z>0
+\end{gather*}
+
+This shows that although biased, the ridge estimator is more efficient
+than the OLS one.
+
+We have that:
+
+\begin{gather*}
+PMSE(\beta(\lambda)|X)=E\left[|| X\hat{\beta}(\lambda)-X\beta||^2 \ | X\right]=E[(\hat{\beta}(\lambda)-\beta)^TX^TX(\hat{\beta}(\lambda)-\beta) \ | X]
+\end{gather*}
+
+Then taking the difference between
+\(PSME(\beta(0)|X)-PSME(\beta(\lambda)|X)\) gives:
+
+\begin{gather*}
+E[(\hat{\beta}(0)-\beta)^TX^TX(\hat{\beta}(0)-\beta) \ | X]-E[(\hat{\beta}(\lambda)-\beta)^TX^TX(\hat{\beta}(\lambda)-\beta) \ | X] \\
+=E[(\hat{\beta}(0) - \hat{\beta}(\lambda))'X'X(\hat{\beta}(\lambda)+\hat{\beta}(0)-2\beta)| X ]
+\end{gather*}
+
+Then I've tried different ways to simplify but couldn't get the answer
+
+\$\lambda Tr\{W\_\lambda\^{}TW\_\lambda[2\sigma^2(X^TX)+\lambda(\sigma^2I_p-\beta\beta^TX^TX)]\}
+\$
+
+In order to show that for a given X the ridge estimator dominates the
+OLS one for PMSE, we want to show that the above difference is indeed
+positive when the matrix \(\sigma^2I_p-\beta\beta^TX^TX\) is positive
+definite. For the trace to be always positive, we need all the
+eigenvalues of the matrix to be positive. This is the case when the
+whole matrix is positive definite. Hence, in what follows we need to
+show that when \(\sigma^2I_p-\beta\beta^TX^TX\) is positive definite,
+then consequently
+\(W_\lambda^TW_\lambda[2\sigma^2(X^TX)+\lambda(\sigma^2I_p-\beta\beta^TX^TX)]\)
+is positive definite (having \(\lambda >0\)).
+
+We first recall some properties of definiteness of matrices: - If A and
+B are positive definite, then the sum \(A + B\) is also positive
+definite. - If A and B are positive definite, then the products \(ABA\)
+and \(BAB\) are also positive definite. If \(AB = BA\), then \(AB\) is
+also positive definite.
+
+From the former we get that
+\(M=2\sigma^2(X^TX)+\lambda(\sigma^2I_p-\beta\beta^TX^TX)\) is positive
+definite, since it is straightforward that the quadratic matrix
+multiplied by a positive constant will be positive definite. For the
+same reason we also know that \(N=W_\lambda^TW_{\lambda}\) is positive
+definite.
+
+Now we just need to show that \(W_\lambda^2 M=W_\lambda M W_{\lambda}\)
+
+Let us start by noticing that \(W_{\lambda}=W_{\lambda}^T\), since the
+transpose of a sum is the sum of transposes and \((X^TX)^T=(X^TX)\),
+\$\lambda I\_p\textsuperscript{T=\lambda I\_p}T \$ since \(I_p^T=I_p\)
+and lambda is a scalar.
+
+\(A^{-1} B^{-1} =(BA)^{-1}\) , where \(A^{-1} = W(lambda)\), and
+\(B^{-1}= M\). From this it follows that:
+
+\begin{gather*}
+
+    W_\lambda[2\sigma^2(X^TX)+\lambda(\sigma^2I_p-\beta\beta^TX^TX)]= A^{-1} B^{-1}
+    =(BA)^{-1} \\
+    \implies  W_\lambda[2\sigma^2(X^TX)+\lambda(\sigma^2I_p-\beta\beta^TX^TX)]=[2\sigma^2(X^TX)+\lambda(\sigma^2I_p-\beta\beta^TX^TX)]W_\lambda
+    
+\end{gather*}
+
+Then we can finally write \$ W\_\lambda\^{}2 M=W\_\lambda M
+W\_\lambda\$, where W and M are positive definite. From the second
+property stated above, this product will be positive definite. Hence the
+trace of this matrix, i.e.~the difference in PSME, will be greater than
+zero, meaning that the ridge estimator dominates the OLS one in the
+predictive mean square error sense.
+
+\hypertarget{e}{%
+\subsection{e)}\label{e}}
+
+\textbackslash end\{document\}
 
 \end{document}
